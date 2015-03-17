@@ -1,0 +1,81 @@
+html {
+	height: 100%;
+}
+
+html, body {
+	overflow-x: hidden;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	position: relative;
+	min-height: 100%;
+    background: #eee;
+    margin:auto;
+    width:80%;
+}
+    
+
+
+header {
+	border-bottom: 2px solid #17a;
+    display: inline-block;
+    width: 100%;
+    /* fix inline-block auto margin */
+    margin-bottom: -4px; 
+}
+
+#main {
+	background: #fff;
+    padding: 10px;
+    margin:0px;
+}
+
+form#search {
+	margin: 10px;
+}
+
+footer {
+	margin: 10px;
+	text-align: center;
+	font-size: 0.8em
+}
+
+img#logo {
+	width:300px;
+    float: left;
+    margin: 1em;
+    margin-right: 2em;
+}
+
+#sitenav {
+    float: right;
+    margin-top: 5em;
+}
+
+#pagenav {
+    float: left;
+    margin-top: 3em;
+    font-weight: bold;
+}
+
+nav a {
+    padding:3.2em 1em 3.2em;
+}
+
+nav a.active {
+	background-color: #17a;
+	color: white;
+}
+
+table {
+	font-size: 90%;
+	white-space: nowrap;
+}
+
+/* package */
+
+table#package {
+	width: 60%;
+	}
