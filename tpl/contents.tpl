@@ -8,14 +8,14 @@
                         <label for="filename">Filename</label>
                         <input type="text" class="form-control" id="filename" name="filename" value="{{{filename}}}">
                     </div>
-	                <div class="form-group">
+                    <div class="form-group">
                         <label for="arch">Architecture</label>
-	                    <select name="arch" class="form-control" id="arch">
+                        <select name="arch" class="form-control" id="arch">
                             <option>x86</option>
                             <option>x86_64</option>
                             <option>armhf</option>
                         </select>
-	                </div>
+                    </div>
                     <button type="submit" class="btn btn-primary">Search</button>
                 </form>
             </div>
@@ -23,15 +23,15 @@
                 <table class="table table-striped table-bordered table-condensed" data-toggle="table">
                     <tr>
                         <th>File</th>
-	                    <th>Package name</th>
-        	            <th>Repository</th>
-	                    <th>Architecture</th>
+                        <th>Package name</th>
+                        <th>Repository</th>
+                        <th>Architecture</th>
                     </tr>{{#rows}}
                     <tr>
                         <td>{{{file}}}</td>
-	                    <td>{{{pkgname}}}</td>
-	                    <td>{{{repo}}}</td>
-	                    <td>{{{arch}}}</td>
+                        <td>{{{pkgname}}}</td>
+                        <td>{{{repo}}}</td>
+                        <td>{{{arch}}}</td>
                     </tr>{{/rows}}
                     {{{^rows}}}
                     <tr>

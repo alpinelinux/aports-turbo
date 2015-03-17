@@ -25,14 +25,14 @@
         <a href="/"><img id="logo" src="/assets/alpinelinux-logo.svg" alt="Alpine Linux logo" /></a>
         <div id="pagenav">
             <nav>
-				{{#packages}}
+                {{#packages}}
                 <a href="/packages" class="active">Packages</a>
                 {{/packages}}
                 {{^packages}}
                 <a href="/packages">Packages</a>
                 {{/packages}}
                 {{#contents}}
-				<a href="/contents" class="active" class="">Contents</a>
+                <a href="/contents" class="active" class="">Contents</a>
                 {{/contents}}
                 {{^contents}}
                 <a href="/contents" class="">Contents</a>
