@@ -11,9 +11,9 @@
                     <div class="form-group">
                         <label for="arch">Architecture</label>
                         <select name="arch" class="form-control" id="arch">
-                            <option>x86</option>
-                            <option>x86_64</option>
-                            <option>armhf</option>
+                            <option {{#x86}}selected{{/x86}} >x86</option>
+                            <option {{#x86_64}}selected{{/x86_64}} >x86_64</option>
+                            <option {{#armhf}}selected{{/armhf}} >armhf</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>

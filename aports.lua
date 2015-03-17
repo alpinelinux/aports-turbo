@@ -9,11 +9,11 @@ local tpl = turbo.web.Mustache.TemplateHelper("./tpl")
 local ContentsRenderer = class("ContentsRenderer", turbo.web.RequestHandler)
 
 function ContentsRenderer:get()
-    local table = {}
     local args = {
         filename = self:get_argument("filename","", true),
         arch = self:get_argument("arch", "x86", true),
     }
+    local table = { [args.arch] = true }
     if args.filename ~= "" then
         local result = QueryContents(args)
         if next(result) ~= nil then
@@ -31,10 +31,11 @@ end
 local PackagesRenderer = class("PackagesRenderer", turbo.web.RequestHandler)
 
 function PackagesRenderer:get()
-    local table = {}
     local args = {
-        package = self:get_argument("package","", true)
+        package = self:get_argument("package","", true),
+        arch = self:get_argument("arch", "x86", true),
     }
+    local table = { [args.arch] = true }
     if args.package == "" then
         args.package = "%"
     end
