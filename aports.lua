@@ -3,7 +3,6 @@
 -- lua turbo application
 
 local turbo = require "turbo"
-local inspect = require "inspect"
 
 local tpl = turbo.web.Mustache.TemplateHelper("./tpl")
 
