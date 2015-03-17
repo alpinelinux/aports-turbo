@@ -47,7 +47,6 @@ function PackagesRenderer:get()
     table.footer = tpl:render("footer.tpl", table)
     local page = tpl:render(self.options, table)
     self:write(page)
-    print(inspect(table))
 end
 
 local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
@@ -118,7 +117,6 @@ function QueryPackage(fields)
     sth:execute(fields.pkgname, fields.arch)
     local r = {}
     r = sth:fetch(true)
-    print(inspect(r))
     return r
 end
 
