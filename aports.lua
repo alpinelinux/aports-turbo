@@ -3,6 +3,11 @@
 -- lua turbo application
 
 local turbo = require "turbo"
+local inspect = require "inspect"
+
+function string.begins(str, prefix)
+    return str:sub(1,#prefix)==prefix
+end
 
 local tpl = turbo.web.Mustache.TemplateHelper("./tpl")
 
@@ -57,9 +62,12 @@ function PackageRenderer:get(arch, pkgname)
     local table = {}
     fields.arch = arch
     fields.pkgname = pkgname
-    result = QueryPackage(fields)
+    local result = QueryPackage(fields)
+    -- check for empty values and destroy them
     if result ~= nil then
         table = result
+        table.deps = QueryDeps(table.deps)
+        table.maintainer = string.gsub(table.maintainer, '<.*>', '')
         for k in pairs (table) do
             if table[k] == "" then
                 table[k] = nil
@@ -69,7 +77,7 @@ function PackageRenderer:get(arch, pkgname)
     table.header = tpl:render("header.tpl")
     table.footer = tpl:render("footer.tpl")
     local page = tpl:render(self.options, table)
-    self:write(page)	
+    self:write(page)
 end
 
 function QueryContents(terms)
@@ -80,8 +88,8 @@ function QueryContents(terms)
     local r = {}
     for row in sth:rows(true) do
         r[#r + 1] = {
-            file = "/" .. row.path .. "/" .. row.file, 
-            pkgname = row.pkgname, 
+            file = "/" .. row.path .. "/" .. row.file,
+            pkgname = row.pkgname,
             repo = row.repo,
             arch = row.arch,
         }
@@ -119,6 +127,31 @@ function QueryPackage(fields)
     local r = {}
     r = sth:fetch(true)
     return r
+end
+
+function QueryDeps(deps)
+    require('DBI')
+    local names = {}
+    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
+    local sth = assert(dbh:prepare('select name from apkindex where provides like ?'))
+    for _,k in pairs (deps:split(" ")) do
+        if k:begins('so:') then
+            sth:execute("%"..k.."%")
+            local l = sth:fetch(true)
+            if l ~= nil then
+                names[l.name] = l.name
+            end
+        else
+            names[k] = k
+        end
+    end
+    local r = {}
+    for _,name in pairs (names) do
+        r[#r+1] = {dep=name}
+    end
+    if next(r) ~= nil then
+        return r
+    end
 end
 
 turbo.web.Application({

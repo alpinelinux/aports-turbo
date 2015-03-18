@@ -1,49 +1,47 @@
 html {
-	height: 100%;
+    height: 100%;
 }
 
 html, body {
-	overflow-x: hidden;
-	margin: 0;
-	padding: 0;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-	position: relative;
-	min-height: 100%;
+    position: relative;
+    min-height: 100%;
     background: #eee;
     margin:auto;
     width:80%;
 }
-    
-
 
 header {
-	border-bottom: 2px solid #17a;
+    border-bottom: 2px solid #17a;
     display: inline-block;
     width: 100%;
     /* fix inline-block auto margin */
-    margin-bottom: -4px; 
+    margin-bottom: -4px;
 }
 
 #main {
-	background: #fff;
+    background: #fff;
     padding: 10px;
     margin:0px;
 }
 
 form#search {
-	margin: 10px;
+    margin: 10px;
 }
 
 footer {
-	margin: 10px;
-	text-align: center;
-	font-size: 0.8em
+    margin: 10px;
+    text-align: center;
+    font-size: 0.8em
 }
 
 img#logo {
-	width:300px;
+    width:300px;
     float: left;
     margin: 1em;
     margin-right: 2em;
@@ -65,17 +63,21 @@ nav a {
 }
 
 nav a.active {
-	background-color: #17a;
-	color: white;
+    background-color: #17a;
+    color: white;
 }
 
-table {
-	font-size: 90%;
-	white-space: nowrap;
+/* icons on deps toggle */
+
+.panel-heading .accordion-toggle:after {
+    /* symbol for "opening" panels */
+    font-family: 'Glyphicons Halflings';  /* essential for enabling glyphicon */
+    content: "\e114";    /* adjust as needed, taken from bootstrap.css */
+    float: right;        /* adjust as needed */
+    color: grey;         /* adjust as needed */
+}
+.panel-heading .accordion-toggle.collapsed:after {
+    /* symbol for "collapsed" panels */
+    content: "\e080";    /* adjust as needed, taken from bootstrap.css */
 }
 
-/* package */
-
-table#package {
-	width: 60%;
-	}
