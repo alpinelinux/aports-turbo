@@ -72,7 +72,7 @@
                                         </tr>
                                         <tr>
                                             <th>Contents:</th>
-                                            <td><a href="/contents?filename={{{name}}}&arch={{{arch}}}">Contents of package</a></td>
+                                            <td><a href="/contents?filename={{{name}}}&amp;arch={{{arch}}}">Contents of package</a></td>
                                         </tr>{{/name}}{{^name}}
                                         <tr>
                                             <td>This package does not exist!</td>
