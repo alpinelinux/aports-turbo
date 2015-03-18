@@ -69,6 +69,10 @@
                                         <tr>
                                             <th>Commit:</th>
                                             <td><a href="http://git.alpinelinux.org/cgit/aports/commit/?id={{{commit}}}">{{{commit}}}</a></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Contents:</th>
+                                            <td><a href="/contents?filename={{{name}}}&arch={{{arch}}}">Contents of package</a></td>
                                         </tr>{{/name}}{{^name}}
                                         <tr>
                                             <td>This package does not exist!</td>
@@ -85,6 +89,30 @@
                                 <div id="collapseDeps" class="panel-collapse collapse">
                                     <ul class="list-group">{{#deps}}
                                         <li class="list-group-item"><a href="/package/{{{arch}}}/{{{dep}}}">{{{dep}}}</a></li>{{/deps}}{{^deps}}<li class="list-group-item">None</li>{{/deps}}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-md-offset-1">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by</a>
+                                </div>
+                                <div id="collapseReqBy" class="panel-collapse collapse">
+                                    <ul class="list-group">{{#reqbys}}
+                                        <li class="list-group-item"><a href="/package/{{{arch}}}/{{{reqby}}}">{{{reqby}}}</a></li>{{/reqbys}}{{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-md-offset-1">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseSubPkg" aria-expanded="false">Sub Packages</a>
+                                </div>
+                                <div id="collapseSubPkg" class="panel-collapse collapse">
+                                    <ul class="list-group">{{#subpkgs}}
+                                        <li class="list-group-item"><a href="/package/{{{arch}}}/{{{subpkg}}}">{{{subpkg}}}</a></li>{{/subpkgs}}{{^subpkgs}}<li class="list-group-item">None</li>{{/subpkgs}}
                                     </ul>
                                 </div>
                             </div>

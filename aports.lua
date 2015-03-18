@@ -57,22 +57,20 @@ end
 
 local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
 
-function PackageRenderer:get(arch, pkgname)
-    local fields = {}
-    local table = {}
-    fields.arch = arch
-    fields.pkgname = pkgname
-    local result = QueryPackage(fields)
-    -- check for empty values and destroy them
-    if result ~= nil then
-        table = result
+function PackageRenderer:get(arch, name)
+    local table = QueryPackage(name, arch)
+    if table ~= nil then
         table.deps = QueryDeps(table.deps)
+        table.reqbys = QueryRequiredBy(table.provides)
+        table.subpkgs = QuerySubPackages(table.origin, table.name)
         table.maintainer = string.gsub(table.maintainer, '<.*>', '')
         for k in pairs (table) do
             if table[k] == "" then
                 table[k] = nil
             end
         end
+    else
+        table = {}
     end
     table.header = tpl:render("header.tpl")
     table.footer = tpl:render("footer.tpl")
@@ -94,6 +92,7 @@ function QueryContents(terms)
             arch = row.arch,
         }
     end
+    sth:close()
     return r
 end
 
@@ -116,16 +115,17 @@ function QueryPackages(terms)
             bdate = row.build_time
         }
     end
+    sth:close()
     return r
 end
 
-function QueryPackage(fields)
+function QueryPackage(name, arch)
     require('DBI')
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
     local sth = assert(dbh:prepare('select *, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and arch like ? limit 1'))
-    sth:execute(fields.pkgname, fields.arch)
-    local r = {}
-    r = sth:fetch(true)
+    sth:execute(name, arch)
+    local r = sth:fetch(true)
+    sth:close()
     return r
 end
 
@@ -145,10 +145,55 @@ function QueryDeps(deps)
             names[k] = k
         end
     end
+    sth:close()
     local r = {}
     for _,name in pairs (names) do
         r[#r+1] = {dep=name}
     end
+    if next(r) ~= nil then
+        return r
+    end
+end
+
+function QueryRequiredBy(provides)
+    require('DBI')
+    local names = {}
+    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
+    local sth = assert(dbh:prepare('select name from apkindex where deps like ?'))
+    for _,d in pairs (provides:split(" ")) do
+        if d:begins('so:') then
+            d = string.gsub(d, '=.*', '')
+            sth:execute("%"..d.."%")
+            for row in sth:rows(true) do
+                if row ~= nil then
+                    names[row.name] = row.name
+                end
+            end
+        end
+    end
+    sth:close()
+    local r = {}
+    for _,name in pairs (names) do
+        r[#r+1] = {reqby=name}
+    end
+    if next(r) ~= nil then
+        return r
+    end
+end
+
+function QuerySubPackages(origin, name)
+    require('DBI')
+    local names = {}
+    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
+    local sth = assert(dbh:prepare('select name from apkindex where origin like ?'))
+    sth:execute(origin)
+    local r = {}
+    for row in sth:rows(true) do
+        if row.name ~= name then
+            r[#r+1] = {subpkg=row.name}
+        end
+    end
+    sth:close()
     if next(r) ~= nil then
         return r
     end
