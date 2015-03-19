@@ -69,8 +69,11 @@ function PackageRenderer:get(arch, name)
     local table = QueryPackage(name, arch)
     if table ~= nil then
         table.deps = QueryDeps(table.deps)
+        table.deps_qty = (table.deps ~= nil) and #table.deps or "0"
         table.reqbys = QueryRequiredBy(table.provides)
+        table.reqdeps_qty = (table.reqdeps ~= nil) and #table.reqdeps or "0"
         table.subpkgs = QuerySubPackages(table.origin, table.name)
+        table.subpkgs_qty = (table.subpkgs ~= nil) and #table.subpkgs or "0"
         table.maintainer = string.gsub(table.maintainer, '<.*>', '')
         for k in pairs (table) do
             if table[k] == "" then

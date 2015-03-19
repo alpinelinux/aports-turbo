@@ -84,7 +84,7 @@
                         <div class="col-md-3 col-md-offset-1">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseDeps" aria-expanded="false">Dependecies</a>
+                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseDeps" aria-expanded="false">Dependecies ({{deps_qty}})</a>
                                 </div>
                                 <div id="collapseDeps" class="panel-collapse collapse">
                                     <ul class="list-group">{{#deps}}
@@ -94,7 +94,7 @@
                             </div>
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by</a>
+                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by ({{reqdeps_qty}})</a>
                                 </div>
                                 <div id="collapseReqBy" class="panel-collapse collapse">
                                     <ul class="list-group">{{#reqbys}}
@@ -104,7 +104,7 @@
                             </div>
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseSubPkg" aria-expanded="false">Sub Packages</a>
+                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseSubPkg" aria-expanded="false">Sub Packages ({{subpkgs_qty}})</a>
                                 </div>
                                 <div id="collapseSubPkg" class="panel-collapse collapse">
                                     <ul class="list-group">{{#subpkgs}}
