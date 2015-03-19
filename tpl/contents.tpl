@@ -9,11 +9,15 @@
                         <input type="text" class="form-control" id="filename" name="filename" value="{{{filename}}}">
                     </div>
                     <div class="form-group">
+                        <label for="pkgname">Package name</label>
+                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{pkgname}}}">
+                    </div>
+                    <div class="form-group">
                         <label for="arch">Architecture</label>
                         <select name="arch" class="form-control" id="arch">
-                            <option {{#x86}}selected{{/x86}} >x86</option>
-                            <option {{#x86_64}}selected{{/x86_64}} >x86_64</option>
-                            <option {{#armhf}}selected{{/armhf}} >armhf</option>
+                            <option{{#x86}} selected {{/x86}}>x86</option>
+                            <option{{#x86_64}} selected {{/x86_64}}>x86_64</option>
+                            <option{{#armhf}} selected {{/armhf}}>armhf</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>
@@ -29,7 +33,7 @@
                     </tr>{{#rows}}
                     <tr>
                         <td>{{{file}}}</td>
-                        <td>{{{pkgname}}}</td>
+                        <td><a href="/package/{{{arch}}}/{{{pkgname}}}">{{{pkgname}}}</a></td>
                         <td>{{{repo}}}</td>
                         <td>{{{arch}}}</td>
                     </tr>{{/rows}}
@@ -39,6 +43,17 @@
                     </tr>
                     {{{/rows}}}
                 </table>
+            </div>
+            <div class="panel-footer text-center">{{#pager}}
+                <nav>
+                    <ul class="pagination">{{/pager}}{{#pager}}{{#prev}}
+                        <li class=""><a href="/contents?{{{prev}}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}{{^prev}}
+                        <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}
+                        <li class="active"><a href="#">{{{page}}}</a></li>{{/pager}}{{#pager}}{{#next}}
+                        <li><a href="/contents?{{{next}}}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}{{^next}}
+                        <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}
+                    </ul>
+                </nav>{{/pager}}
             </div>
         </div>
     </div>

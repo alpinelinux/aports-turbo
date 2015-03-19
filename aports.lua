@@ -16,21 +16,29 @@ local ContentsRenderer = class("ContentsRenderer", turbo.web.RequestHandler)
 function ContentsRenderer:get()
     local args = {
         filename = self:get_argument("filename","", true),
+        pkgname = self:get_argument("pkgname", "", true),
         arch = self:get_argument("arch", "x86", true),
+        page = self:get_argument("page", "", true),
     }
-    local table = { [args.arch] = true }
-    if args.filename ~= "" then
-        local result = QueryContents(args)
-        if next(result) ~= nil then
-            table.rows = result
-        end
+    -- assign different variables for db query
+    local fname = (args.filename == "") and "%" or args.filename
+    local pname = (args.pkgname == "") and "%" or args.pkgname
+    local table = {}
+    if not (fname == "%" and pname == "%") then
+        table.rows = QueryContents(fname, pname, args.arch, args.page)
+        local rows = (table.rows ~= nil) and (#table.rows) or 0
+        table.pager = CreatePagerUri(args, rows)
     end
-    table.contents = true
+    print(inspect(table.pager))
+    table.page = (args.page == "") and "1" or args.page
     table.filename = args.filename
+    table.pkgname = args.pkgname
+    table[args.arch] = true
+    table.contents = true
+    table.pkgname = args.pkgname
     table.header = tpl:render("header.tpl", table)
     table.footer = tpl:render("footer.tpl", table)
-    local page = tpl:render(self.options, table)
-    self:write(page)
+    self:write(tpl:render(self.options, table))
 end
 
 local PackagesRenderer = class("PackagesRenderer", turbo.web.RequestHandler)
@@ -78,11 +86,12 @@ function PackageRenderer:get(arch, name)
     self:write(page)
 end
 
-function QueryContents(terms)
+function QueryContents(filename, pkgname, arch, page)
     require('DBI')
+    local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
     local dbh = assert(DBI.Connect('SQLite3', 'db/filelist.db'))
-    local sth = assert(dbh:prepare('select * from filelist where file like ? and arch like ? limit 100'))
-    sth:execute(terms.filename, terms.arch)
+    local sth = assert(dbh:prepare('select * from filelist where file like ? and pkgname like ? and arch like ? limit ?,50'))
+    sth:execute(filename, pkgname, arch, offset)
     local r = {}
     for row in sth:rows(true) do
         r[#r + 1] = {
@@ -93,7 +102,9 @@ function QueryContents(terms)
         }
     end
     sth:close()
-    return r
+    if next(r) ~= nil then
+        return r
+    end
 end
 
 function QueryPackages(terms)
@@ -103,7 +114,7 @@ function QueryPackages(terms)
     sth:execute(terms.package)
     local r = {}
     for row in sth:rows(true) do
-        r[#r + 1] = {
+    r[#r+1] = {
             package = row.name,
             version = row.version,
             project = row.url,
@@ -196,6 +207,40 @@ function QuerySubPackages(origin, name)
     sth:close()
     if next(r) ~= nil then
         return r
+    end
+end
+
+function CreatePagerUri(args, rows)
+    local r,p,n = {},{},{};
+    for get,value in pairs (args) do
+        if (get == 'page') then
+            value = (tonumber(value)) and tonumber(value) or 1
+            -- do not include page on first page
+            if value > 2 then
+                p[#p + 1] = get.."="..(value-1)
+            end
+            n[#n + 1] = get.."="..(value+1)
+        else
+            p[#p + 1] = get.."="..(value)
+            n[#n + 1] = get.."="..(value)
+        end
+    end
+
+    -- show pager when rows are 50+
+    if rows >= 50 then
+        r.next = table.concat(n, '&amp;')
+        r.prev = table.concat(p, '&amp;')
+    end
+    -- do not show prev on first page
+    if args.page == "" and rows >= 50 then
+        r.prev = nil
+    end
+    -- show prev on last page
+    if args.page ~= "" and (rows >= 0 and rows <= 50) then
+        r.prev = table.concat(p, '&amp;')
+    end
+    if next(r) ~= nil then
+        return {r}
     end
 end
 
