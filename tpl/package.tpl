@@ -92,8 +92,6 @@
                                     </ul>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-md-offset-1">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by</a>
@@ -104,8 +102,6 @@
                                     </ul>
                                 </div>
                             </div>
-                        </div>
-                        <div class="col-md-3 col-md-offset-1">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <a class="accordion-toggle" data-toggle="collapse" href="#collapseSubPkg" aria-expanded="false">Sub Packages</a>
