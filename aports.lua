@@ -28,9 +28,8 @@ function ContentsRenderer:get()
         table.rows = QueryContents(fname, pname, args.arch, args.page)
         local rows = (table.rows ~= nil) and (#table.rows) or 0
         table.pager = CreatePagerUri(args, rows)
+        table.page = (args.page == "") and "1" or args.page
     end
-    print(inspect(table.pager))
-    table.page = (args.page == "") and "1" or args.page
     table.filename = args.filename
     table.pkgname = args.pkgname
     table[args.arch] = true
