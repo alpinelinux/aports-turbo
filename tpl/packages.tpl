@@ -48,6 +48,17 @@
                     {{{/rows}}}
                 </table>
             </div>
+            <div class="panel-footer text-center">{{#pager}}
+                <nav>
+                    <ul class="pagination">{{/pager}}{{#pager}}{{#prev}}
+                        <li class=""><a href="/packages?{{{prev}}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}{{^prev}}
+                        <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}
+                        <li class="active"><a href="#">{{{page}}}</a></li>{{/pager}}{{#pager}}{{#next}}
+                        <li><a href="/packages?{{{next}}}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}{{^next}}
+                        <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}
+                    </ul>
+                </nav>{{/pager}}
+            </div>
         </div>
     </div>
 {{{footer}}}

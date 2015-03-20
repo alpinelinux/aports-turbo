@@ -46,14 +46,18 @@ function PackagesRenderer:get()
     local args = {
         package = self:get_argument("package","", true),
         arch = self:get_argument("arch", "x86", true),
+        page = self:get_argument("page", "", true),
     }
     local table = { [args.arch] = true }
     if args.package == "" then
         args.package = "%"
     end
-    local result = QueryPackages(args)
+    local result = QueryPackages(args, args.page)
     if next(result) ~= nil then
         table.rows = result
+        local rows = (table.rows ~= nil) and (#table.rows) or 0
+        table.pager = CreatePagerUri(args, rows)
+        table.page = (args.page == "") and "1" or args.page
     end
     table.packages = true
     table.header = tpl:render("header.tpl", table)
@@ -109,23 +113,24 @@ function QueryContents(filename, pkgname, arch, page)
     end
 end
 
-function QueryPackages(terms)
+function QueryPackages(terms, page)
     require('DBI')
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? ORDER BY build_time DESC limit 100'))
-    sth:execute(terms.package)
+    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? ORDER BY build_time DESC limit ?,50'))
+    local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
+    sth:execute(terms.package, offset)
     local r = {}
     for row in sth:rows(true) do
-    r[#r+1] = {
-            package = row.name,
-            version = row.version,
-            project = row.url,
-            license = row.lic,
-            desc = row.desc,
-            arch = row.arch,
-            repo = "unk",
-            maintainer = string.gsub(row.maintainer, '<.*>', ''),
-            bdate = row.build_time
+        r[#r+1] = {
+                package = row.name,
+                version = row.version,
+                project = row.url,
+                license = row.lic,
+                desc = row.desc,
+                arch = row.arch,
+                repo = "unk",
+                maintainer = string.gsub(row.maintainer, '<.*>', ''),
+                bdate = row.build_time
         }
     end
     sth:close()
