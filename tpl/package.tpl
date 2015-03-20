@@ -41,11 +41,11 @@
                                             </tr>
                                             <tr>
                                                 <th>Size:</th>
-                                                <td>{{{size}}} Bytes</td>
+                                                <td>{{{size}}}</td>
                                             </tr>{{#install_size}}
                                             <tr>
                                                 <th>Installed size:</th>
-                                                <td>{{{install_size}}} Bytes</td>
+                                                <td>{{{install_size}}}</td>
                                             </tr>{{/install_size}}{{#provides}}
                                             <tr>
                                                 <th>Provides:</th>

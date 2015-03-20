@@ -9,6 +9,14 @@ function string.begins(str, prefix)
     return str:sub(1,#prefix)==prefix
 end
 
+function human_bytes(bytes)
+    local mult = 10^(2)
+    local size = { 'B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB' }
+    local factor = math.floor((string.len(bytes) -1) /3)
+    local result = bytes/math.pow(1024, factor)
+    return math.floor(result * mult + 0.5) / mult.." "..size[factor+1]
+end
+
 local tpl = turbo.web.Mustache.TemplateHelper("./tpl")
 
 local ContentsRenderer = class("ContentsRenderer", turbo.web.RequestHandler)
@@ -71,6 +79,8 @@ local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
 function PackageRenderer:get(arch, name)
     local table = QueryPackage(name, arch)
     if table ~= nil then
+        table.install_size = human_bytes(table.install_size)
+        table.size = human_bytes(table.size)
         table.deps = QueryDeps(table.deps)
         table.deps_qty = (table.deps ~= nil) and #table.deps or "0"
         table.reqbys = QueryRequiredBy(table.provides)
