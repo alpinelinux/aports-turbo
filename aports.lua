@@ -87,7 +87,7 @@ function PackageRenderer:get(arch, name)
         table.reqdeps_qty = (table.reqdeps ~= nil) and #table.reqdeps or "0"
         table.subpkgs = QuerySubPackages(table.origin, table.name)
         table.subpkgs_qty = (table.subpkgs ~= nil) and #table.subpkgs or "0"
-        table.maintainer = string.gsub(table.maintainer, '<.*>', '')
+        table.maintainer = (table.maintainer ~= "") and string.gsub(table.maintainer, '<.*>', '') or "None"
         for k in pairs (table) do
             if table[k] == "" then
                 table[k] = nil
@@ -131,6 +131,7 @@ function QueryPackages(args)
     sth:execute(args.package, args.arch, offset)
     local r = {}
     for row in sth:rows(true) do
+        print(inspect(row.maintainer))
         r[#r+1] = {
                 package = row.name,
                 version = row.version,
@@ -139,7 +140,7 @@ function QueryPackages(args)
                 desc = row.desc,
                 arch = row.arch,
                 repo = row.repo,
-                maintainer = string.gsub(row.maintainer, '<.*>', ''),
+                maintainer = (row.maintainer ~= "") and string.gsub(row.maintainer, '<.*>', '') or "None",
                 bdate = row.build_time
         }
     end
