@@ -24,6 +24,8 @@ header {
     margin-bottom: -4px;
 }
 
+@media all and (max-width:40.000em) { body { width: 97% } }
+
 #main {
     background: #fff;
     padding: 10px;
@@ -41,7 +43,7 @@ footer {
 }
 
 img#logo {
-    width:300px;
+    width:20%;
     float: left;
     margin: 1em;
     margin-right: 2em;
