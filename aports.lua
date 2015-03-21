@@ -60,7 +60,7 @@ function PackagesRenderer:get()
     if args.package == "" then
         args.package = "%"
     end
-    local result = QueryPackages(args, args.page)
+    local result = QueryPackages(args)
     if next(result) ~= nil then
         table.rows = result
         local rows = (table.rows ~= nil) and (#table.rows) or 0
@@ -123,12 +123,12 @@ function QueryContents(filename, pkgname, arch, page)
     end
 end
 
-function QueryPackages(terms, page)
+function QueryPackages(args)
     require('DBI')
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? ORDER BY build_time DESC limit ?,50'))
-    local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
-    sth:execute(terms.package, offset)
+    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, repo, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and arch like ? ORDER BY build_time DESC limit ?,50'))
+    local offset = (tonumber(args.page) == nil) and 0 or tonumber(args.page)*50
+    sth:execute(args.package, args.arch, offset)
     local r = {}
     for row in sth:rows(true) do
         r[#r+1] = {
@@ -138,7 +138,7 @@ function QueryPackages(terms, page)
                 license = row.lic,
                 desc = row.desc,
                 arch = row.arch,
-                repo = "unk",
+                repo = row.repo,
                 maintainer = string.gsub(row.maintainer, '<.*>', ''),
                 bdate = row.build_time
         }
