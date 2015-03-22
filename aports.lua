@@ -81,11 +81,11 @@ function PackageRenderer:get(arch, name)
     if table ~= nil then
         table.install_size = human_bytes(table.install_size)
         table.size = human_bytes(table.size)
-        table.deps = QueryDeps(table.deps)
+        table.deps = QueryDeps(table.deps, arch)
         table.deps_qty = (table.deps ~= nil) and #table.deps or "0"
-        table.reqbys = QueryRequiredBy(table.provides)
-        table.reqdeps_qty = (table.reqdeps ~= nil) and #table.reqdeps or "0"
-        table.subpkgs = QuerySubPackages(table.origin, table.name)
+        table.reqbys = QueryRequiredBy(table.provides, arch)
+        table.reqbys_qty = (table.reqbys ~= nil) and #table.reqbys or "0"
+        table.subpkgs = QuerySubPackages(table.origin, table.name, arch)
         table.subpkgs_qty = (table.subpkgs ~= nil) and #table.subpkgs or "0"
         table.maintainer = (table.maintainer ~= "") and string.gsub(table.maintainer, '<.*>', '') or "None"
         for k in pairs (table) do
@@ -158,14 +158,14 @@ function QueryPackage(name, arch)
     return r
 end
 
-function QueryDeps(deps)
+function QueryDeps(deps, arch)
     require('DBI')
     local names = {}
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name from apkindex where provides like ?'))
+    local sth = assert(dbh:prepare('select name from apkindex where provides like ? and arch like ?'))
     for _,k in pairs (deps:split(" ")) do
         if k:begins('so:') then
-            sth:execute("%"..k.."%")
+            sth:execute("%"..k.."%", arch)
             local l = sth:fetch(true)
             if l ~= nil then
                 names[l.name] = l.name
@@ -184,15 +184,15 @@ function QueryDeps(deps)
     end
 end
 
-function QueryRequiredBy(provides)
+function QueryRequiredBy(provides, arch)
     require('DBI')
     local names = {}
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name from apkindex where deps like ?'))
+    local sth = assert(dbh:prepare('select name from apkindex where deps like ? and arch like ?'))
     for _,d in pairs (provides:split(" ")) do
         if d:begins('so:') then
             d = string.gsub(d, '=.*', '')
-            sth:execute("%"..d.."%")
+            sth:execute("%"..d.."%", arch)
             for row in sth:rows(true) do
                 if row ~= nil then
                     names[row.name] = row.name
@@ -210,12 +210,12 @@ function QueryRequiredBy(provides)
     end
 end
 
-function QuerySubPackages(origin, name)
+function QuerySubPackages(origin, name, arch)
     require('DBI')
     local names = {}
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name from apkindex where origin like ?'))
-    sth:execute(origin)
+    local sth = assert(dbh:prepare('select name from apkindex where origin like ? and arch like ?'))
+    sth:execute(origin, arch)
     local r = {}
     for row in sth:rows(true) do
         if row.name ~= name then

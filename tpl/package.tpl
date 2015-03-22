@@ -25,7 +25,7 @@
                                             </tr>
                                             <tr>
                                                 <th>Project:</th>
-                                                <td><a href="{{{url}}}">URL</a></td>
+                                                <td><a href="{{{url}}}">{{{url}}}</a></td>
                                             </tr>
                                             <tr>
                                                 <th>Licence:</th>
@@ -36,24 +36,16 @@
                                                 <td>{{{arch}}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Checksum:</th>
-                                                <td>{{{csum}}}</td>
-                                            </tr>
-                                            <tr>
                                                 <th>Size:</th>
                                                 <td>{{{size}}}</td>
                                             </tr>{{#install_size}}
                                             <tr>
                                                 <th>Installed size:</th>
                                                 <td>{{{install_size}}}</td>
-                                            </tr>{{/install_size}}{{#provides}}
-                                            <tr>
-                                                <th>Provides:</th>
-                                                <td>{{{provides}}}</td>
-                                            </tr>{{/provides}}{{#install_if}}
+                                            </tr>{{/install_size}}{{#install_if}}
                                             <tr>
                                                 <th>Install if:</th>
-                                                <td>{{{install_if}}}</td>
+                                                <td><a href="/package/{{{arch}}}/{{{install_if}}}">{{{install_if}}}</a></td>
                                             </tr>{{/install_if}}{{#name}}
                                             <tr>
                                                 <th>Origin:</th>
@@ -96,7 +88,7 @@
                             </div>
                             <div class="panel panel-default">
                                 <div class="panel-heading">
-                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by ({{reqdeps_qty}})</a>
+                                    <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by ({{reqbys_qty}})</a>
                                 </div>
                                 <div id="collapseReqBy" class="panel-collapse collapse">
                                     <ul class="list-group">{{#reqbys}}
