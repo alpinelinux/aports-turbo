@@ -226,16 +226,15 @@ function QuerySubPackages(origin, name, arch)
 end
 
 function CreatePagerUri(args, rows)
-    local r,p,n = {},{},{};
+    local r,p,n,page = {},{},{}
     for get,value in pairs (args) do
         if (get == 'page') then
-            value = (tonumber(value)) and tonumber(value) or 1
-            r.page = value
+            page = (tonumber(value)) and tonumber(value) or 1
             -- do not include page on first page
-            if value > 2 then
-                p[#p + 1] = get.."="..(value-1)
+            if page > 2 then
+                p[#p + 1] = get.."="..(page-1)
             end
-            n[#n + 1] = get.."="..(value+1)
+            n[#n + 1] = get.."="..(page+1)
         else
             p[#p + 1] = get.."="..(value)
             n[#n + 1] = get.."="..(value)
@@ -255,6 +254,7 @@ function CreatePagerUri(args, rows)
         r.prev = table.concat(p, '&amp;')
     end
     if next(r) ~= nil then
+        r.page = (page == nil) and 1 or page
         return {r}
     end
 end
