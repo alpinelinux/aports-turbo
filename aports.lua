@@ -56,12 +56,11 @@ function PackagesRenderer:get()
         page = self:get_argument("page", 1, true),
     }
     local table = { [args.arch] = true }
-    if args.package == "" then
-        args.package = "%"
-    end
-    local result = QueryPackages(args)
+    local pname = (args.package == "") and "%" or args.package
+    local result = QueryPackages(pname, args.arch, args.page)
     if next(result) ~= nil then
         table.rows = result
+        table.package = args.package
         local rows = (table.rows ~= nil) and (#table.rows) or 0
         table.pager = CreatePagerUri(args, rows)
     end
@@ -121,12 +120,12 @@ function QueryContents(filename, pkgname, arch, page)
     end
 end
 
-function QueryPackages(args)
+function QueryPackages(package, arch, page)
     require('DBI')
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
     local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, repo, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and arch like ? ORDER BY build_time DESC limit ?,50'))
-    local offset = (tonumber(args.page) == nil) and 0 or tonumber(args.page)*50
-    sth:execute(args.package, args.arch, offset)
+    local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
+    sth:execute(package, arch, offset)
     local r = {}
     for row in sth:rows(true) do
         r[#r+1] = {
