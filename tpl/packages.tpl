@@ -9,11 +9,19 @@
                         <input type="text" class="form-control" id="package" name="package" value="{{{package}}}">
                     </div>
                     <div class="form-group">
+                        <label for="repo">Repository</label>
+                        <select name="repo" class="form-control" id="repo">
+                            <option{{{#all}}} selected {{{/all}}}>all</option>
+                            <option{{{#main}}} selected {{{/main}}}>main</option>
+                            <option{{{#testing}}} selected {{{/testing}}}>testing</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label for="arch">Architecture</label>
                         <select name="arch" class="form-control" id="arch">
-                            <option {{#x86}}selected{{/x86}} >x86</option>
-                            <option {{#x86_64}}selected{{/x86_64}} >x86_64</option>
-                            <option {{#armhf}}selected{{/armhf}} >armhf</option>
+                            <option{{#x86}} selected {{/x86}}>x86</option>
+                            <option{{#x86_64}} selected {{/x86_64}}>x86_64</option>
+                            <option{{#armhf}} selected {{/armhf}}>armhf</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>

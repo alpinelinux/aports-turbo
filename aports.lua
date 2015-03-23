@@ -53,18 +53,23 @@ function PackagesRenderer:get()
     local args = {
         package = self:get_argument("package","", true),
         arch = self:get_argument("arch", "x86", true),
+        repo = self:get_argument("repo", "all", true),
         page = tonumber(self:get_argument("page", 1, true)),
     }
-    local table = { [args.arch] = true }
+    local table = {}
     local pname = (args.package == "") and "%" or args.package
-    local result = QueryPackages(pname, args.arch, args.page)
+    local rname = (args.repo == "all") and "%" or args.repo
+    local result = QueryPackages(pname, rname, args.arch, args.page)
     if next(result) ~= nil then
         table.rows = result
-        table.package = args.package
+        table.repo = args.repo
         local rows = (table.rows ~= nil) and (#table.rows) or 0
         table.pager = CreatePagerUri(args, rows)
     end
+    table[args.arch] = true
+    table[args.repo] = true
     table.packages = true
+    table.package = args.package
     table.header = tpl:render("header.tpl", table)
     table.footer = tpl:render("footer.tpl", table)
     local page = tpl:render(self.options, table)
@@ -120,13 +125,11 @@ function QueryContents(filename, pkgname, arch, page)
     end
 end
 
-function QueryPackages(package, arch, page)
+function QueryPackages(package, repo, arch, page)
     require('DBI')
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, repo, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and arch like ? ORDER BY build_time DESC limit ?,50'))
-    local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
-    local offset = (page - 1) * 50
-    sth:execute(package, arch, (page - 1) * 50)
+    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, repo, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and repo like ? and arch like ? ORDER BY build_time DESC limit ?,50'))
+    sth:execute(package, repo, arch, (page - 1) * 50)
     local r = {}
     for row in sth:rows(true) do
         r[#r+1] = {
