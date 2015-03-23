@@ -36,7 +36,6 @@ function ContentsRenderer:get()
         table.rows = QueryContents(fname, pname, args.arch, args.page)
         local rows = (table.rows ~= nil) and (#table.rows) or 0
         table.pager = CreatePagerUri(args, rows)
-        table.page = (args.page == "") and "1" or args.page
     end
     table.filename = args.filename
     table.pkgname = args.pkgname
@@ -65,7 +64,6 @@ function PackagesRenderer:get()
         table.rows = result
         local rows = (table.rows ~= nil) and (#table.rows) or 0
         table.pager = CreatePagerUri(args, rows)
-        table.page = (args.page == "") and "1" or args.page
     end
     table.packages = true
     table.header = tpl:render("header.tpl", table)
@@ -131,7 +129,6 @@ function QueryPackages(args)
     sth:execute(args.package, args.arch, offset)
     local r = {}
     for row in sth:rows(true) do
-        print(inspect(row.maintainer))
         r[#r+1] = {
                 package = row.name,
                 version = row.version,
@@ -233,6 +230,7 @@ function CreatePagerUri(args, rows)
     for get,value in pairs (args) do
         if (get == 'page') then
             value = (tonumber(value)) and tonumber(value) or 1
+            r.page = value
             -- do not include page on first page
             if value > 2 then
                 p[#p + 1] = get.."="..(value-1)
@@ -243,7 +241,6 @@ function CreatePagerUri(args, rows)
             n[#n + 1] = get.."="..(value)
         end
     end
-
     -- show pager when rows are 50+
     if rows >= 50 then
         r.next = table.concat(n, '&amp;')
