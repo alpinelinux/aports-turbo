@@ -26,7 +26,7 @@ function ContentsRenderer:get()
         filename = self:get_argument("filename","", true),
         pkgname = self:get_argument("pkgname", "", true),
         arch = self:get_argument("arch", "x86", true),
-        page = self:get_argument("page", 1, true),
+        page = tonumber(self:get_argument("page", 1, true)),
     }
     -- assign different variables for db query
     local fname = (args.filename == "") and "%" or args.filename
@@ -53,7 +53,7 @@ function PackagesRenderer:get()
     local args = {
         package = self:get_argument("package","", true),
         arch = self:get_argument("arch", "x86", true),
-        page = self:get_argument("page", 1, true),
+        page = tonumber(self:get_argument("page", 1, true)),
     }
     local table = { [args.arch] = true }
     local pname = (args.package == "") and "%" or args.package
@@ -125,6 +125,7 @@ function QueryPackages(package, arch, page)
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
     local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, repo, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and arch like ? ORDER BY build_time DESC limit ?,50'))
     local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
+    local offset = (page - 1) * 50
     sth:execute(package, arch, offset)
     local r = {}
     for row in sth:rows(true) do
@@ -228,12 +229,11 @@ function CreatePagerUri(args, rows)
     local r,p,n,page = {},{},{}
     for get,value in pairs (args) do
         if (get == 'page') then
-            page = tonumber(value)
             -- do not include page on first page
-            if page > 2 then
-                p[#p + 1] = get.."="..(page-1)
+            if value > 2 then
+                p[#p + 1] = get.."="..(value-1)
             end
-            n[#n + 1] = get.."="..(page+1)
+            n[#n + 1] = get.."="..(value+1)
         else
             p[#p + 1] = get.."="..(value)
             n[#n + 1] = get.."="..(value)
@@ -245,15 +245,15 @@ function CreatePagerUri(args, rows)
         r.prev = table.concat(p, '&amp;')
     end
     -- do not show prev on first page
-    if args.page == "" and rows >= 50 then
+    if args.page == 1 and rows >= 50 then
         r.prev = nil
     end
     -- show prev on last page
-    if args.page ~= "" and (rows >= 0 and rows <= 50) then
+    if args.page ~= 1 and (rows >= 0 and rows <= 50) then
         r.prev = table.concat(p, '&amp;')
     end
     if next(r) ~= nil then
-        r.page = page
+        r.page = args.page
         return {r}
     end
 end
