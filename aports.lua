@@ -26,7 +26,7 @@ function ContentsRenderer:get()
         filename = self:get_argument("filename","", true),
         pkgname = self:get_argument("pkgname", "", true),
         arch = self:get_argument("arch", "x86", true),
-        page = self:get_argument("page", "", true),
+        page = self:get_argument("page", 1, true),
     }
     -- assign different variables for db query
     local fname = (args.filename == "") and "%" or args.filename
@@ -53,7 +53,7 @@ function PackagesRenderer:get()
     local args = {
         package = self:get_argument("package","", true),
         arch = self:get_argument("arch", "x86", true),
-        page = self:get_argument("page", "", true),
+        page = self:get_argument("page", 1, true),
     }
     local table = { [args.arch] = true }
     if args.package == "" then
@@ -229,7 +229,7 @@ function CreatePagerUri(args, rows)
     local r,p,n,page = {},{},{}
     for get,value in pairs (args) do
         if (get == 'page') then
-            page = (tonumber(value)) and tonumber(value) or 1
+            page = tonumber(value)
             -- do not include page on first page
             if page > 2 then
                 p[#p + 1] = get.."="..(page-1)
@@ -254,7 +254,7 @@ function CreatePagerUri(args, rows)
         r.prev = table.concat(p, '&amp;')
     end
     if next(r) ~= nil then
-        r.page = (page == nil) and 1 or page
+        r.page = page
         return {r}
     end
 end
