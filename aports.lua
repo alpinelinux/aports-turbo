@@ -105,7 +105,6 @@ function QueryContents(filename, pkgname, arch, page)
     local dbh = assert(DBI.Connect('SQLite3', 'db/filelist.db'))
     local sth = assert(dbh:prepare('select * from filelist where file like ? and pkgname like ? and arch like ? limit ?,50'))
     sth:execute(filename, pkgname, arch, (page - 1) * 50)
-    print((page - 1) * 50)
     local r = {}
     for row in sth:rows(true) do
         r[#r + 1] = {
