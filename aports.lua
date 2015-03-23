@@ -168,10 +168,10 @@ function QueryDeps(deps, arch)
             sth:execute("%"..k.."%", arch)
             local l = sth:fetch(true)
             if l ~= nil then
-                names[l.name] = l.name
+                names[l.name] = l.name:gsub('=.*', '')
             end
         else
-            names[k] = k
+            names[k] = k:gsub('=.*', '')
         end
     end
     sth:close()
