@@ -6,15 +6,15 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <label for="filename">File</label>
-                        <input type="text" class="form-control" id="filename" name="filename" value="{{{filename}}}">
+                        <input type="text" class="form-control" id="filename" name="filename" value="{{{filename}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="path">Path</label>
-                        <input type="text" class="form-control" id="path" name="path" value="{{{path}}}">
+                        <input type="text" class="form-control" id="path" name="path" value="{{{path}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="pkgname">Package</label>
-                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{pkgname}}}">
+                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{pkgname}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="arch">Architecture</label>

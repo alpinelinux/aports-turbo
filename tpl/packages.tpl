@@ -6,7 +6,7 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <label for="package">Package name</label>
-                        <input type="text" class="form-control" id="package" name="package" value="{{{package}}}">
+                        <input type="text" class="form-control" id="package" name="package" value="{{{package}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="repo">Repository</label>
