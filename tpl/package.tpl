@@ -13,7 +13,7 @@
                                         <table class="table table-striped table-bordered table-condensed">{{#name}}
                                             <tr>
                                                 <th>Name:</th>
-                                                <td title="{{{desc}}}"><a href="/package/{{{name}}}">{{{name}}}</a></td>
+                                                <td>{{{name}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Version:</th>
@@ -32,6 +32,10 @@
                                                 <td>{{{lic}}}</td>
                                             </tr>
                                             <tr>
+                                                <th>Repository:</th>
+                                                <td>{{{repo}}}</td>
+                                            </tr>
+                                            <tr>
                                                 <th>Architecture:</th>
                                                 <td>{{{arch}}}</td>
                                             </tr>
@@ -45,11 +49,11 @@
                                             </tr>{{/install_size}}{{#install_if}}
                                             <tr>
                                                 <th>Install if:</th>
-                                                <td><a href="/package/{{{arch}}}/{{{install_if}}}">{{{install_if}}}</a></td>
+                                                <td><a href="/package/{{{repo}}}/{{{arch}}}/{{{install_if}}}">{{{install_if}}}</a></td>
                                             </tr>{{/install_if}}{{#name}}
                                             <tr>
                                                 <th>Origin:</th>
-                                                <td><a href="/package/{{{arch}}}/{{{origin}}}">{{{origin}}}</a></td>
+                                                <td><a href="/package/{{{repo}}}/{{{arch}}}/{{{origin}}}">{{{origin}}}</a></td>
                                             </tr>
                                             <tr>
                                                 <th>Maintainer:</th>
@@ -82,7 +86,7 @@
                                 </div>
                                 <div id="collapseDeps" class="panel-collapse collapse">
                                     <ul class="list-group">{{#deps}}
-                                        <li class="list-group-item"><a href="/package/{{{arch}}}/{{{dep}}}">{{{dep}}}</a></li>{{/deps}}{{^deps}}<li class="list-group-item">None</li>{{/deps}}
+                                        <li class="list-group-item"><a href="/package/{{{repo}}}/{{{arch}}}/{{{dep}}}">{{{dep}}}</a></li>{{/deps}}{{^deps}}<li class="list-group-item">None</li>{{/deps}}
                                     </ul>
                                 </div>
                             </div>
@@ -92,7 +96,7 @@
                                 </div>
                                 <div id="collapseReqBy" class="panel-collapse collapse">
                                     <ul class="list-group">{{#reqbys}}
-                                        <li class="list-group-item"><a href="/package/{{{arch}}}/{{{reqby}}}">{{{reqby}}}</a></li>{{/reqbys}}{{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
+                                        <li class="list-group-item"><a href="/package/{{{repo}}}/{{{arch}}}/{{{reqby}}}">{{{reqby}}}</a></li>{{/reqbys}}{{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
                                     </ul>
                                 </div>
                             </div>
@@ -102,7 +106,7 @@
                                 </div>
                                 <div id="collapseSubPkg" class="panel-collapse collapse">
                                     <ul class="list-group">{{#subpkgs}}
-                                        <li class="list-group-item"><a href="/package/{{{arch}}}/{{{subpkg}}}">{{{subpkg}}}</a></li>{{/subpkgs}}{{^subpkgs}}<li class="list-group-item">None</li>{{/subpkgs}}
+                                        <li class="list-group-item"><a href="/package/{{{repo}}}/{{{arch}}}/{{{subpkg}}}">{{{subpkg}}}</a></li>{{/subpkgs}}{{^subpkgs}}<li class="list-group-item">None</li>{{/subpkgs}}
                                     </ul>
                                 </div>
                             </div>

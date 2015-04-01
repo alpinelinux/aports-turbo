@@ -81,8 +81,8 @@ end
 
 local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
 
-function PackageRenderer:get(arch, name)
-    local table = QueryPackage(name, arch)
+function PackageRenderer:get(repo, arch, name)
+    local table = QueryPackage(name, repo, arch)
     if table ~= nil then
         table.install_size = human_bytes(table.install_size)
         table.size = human_bytes(table.size)
@@ -151,11 +151,11 @@ function QueryPackages(package, repo, arch, page)
     return r
 end
 
-function QueryPackage(name, arch)
+function QueryPackage(name, repo, arch)
     require('DBI')
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select *, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and arch like ? limit 1'))
-    sth:execute(name, arch)
+    local sth = assert(dbh:prepare('select *, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and repo like ? and arch like ? limit 1'))
+    sth:execute(name, repo, arch)
     local r = sth:fetch(true)
     sth:close()
     return r
@@ -268,7 +268,7 @@ turbo.web.Application({
     {"^/$", turbo.web.RedirectHandler, "/packages"},
     {"^/contents$", ContentsRenderer, "contents.tpl"},
     {"^/packages$", PackagesRenderer, "packages.tpl"},
-    {"^/package/(.*)/(.*)$", PackageRenderer, "package.tpl"},
+    {"^/package/(.*)/(.*)/(.*)$", PackageRenderer, "package.tpl"},
     {"/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
 }):listen(8888)
 turbo.ioloop.instance():start()

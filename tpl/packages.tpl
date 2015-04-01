@@ -40,7 +40,7 @@
                         <th>Build date</th>
                     </tr>{{#rows}}
                     <tr>
-                        <td class="package" title="{{{desc}}}"><a href="/package/{{{arch}}}/{{{package}}}">{{{package}}}</a></td>
+                        <td class="package" title="{{{desc}}}"><a href="/package/{{{repo}}}/{{{arch}}}/{{{package}}}">{{{package}}}</a></td>
                         <td class="version">{{{version}}}</td>
                         <td class="url"><a href="{{{project}}}">URL</a></td>
                         <td class="license">{{{license}}}</td>

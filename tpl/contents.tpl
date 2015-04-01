@@ -37,7 +37,7 @@
                     </tr>{{#rows}}
                     <tr>
                         <td>{{{file}}}</td>
-                        <td><a href="/package/{{{arch}}}/{{{pkgname}}}">{{{pkgname}}}</a></td>
+                        <td><a href="/package/{{{repo}}}/{{{arch}}}/{{{pkgname}}}">{{{pkgname}}}</a></td>
                         <td>{{{repo}}}</td>
                         <td>{{{arch}}}</td>
                     </tr>{{/rows}}
