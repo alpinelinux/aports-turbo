@@ -109,7 +109,7 @@ end
 
 function QueryContents(filename, path, pkgname, arch, page)
     require('DBI')
-    local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
+    local offset = (page == nil) and 0 or (page * 50)
     local dbh = assert(DBI.Connect('SQLite3', 'db/filelist.db'))
     local sth = assert(dbh:prepare('select * from filelist where file like ? and path like ? and pkgname like ? and arch like ? limit ?,50'))
     sth:execute(filename, path, pkgname, arch, (page - 1) * 50)
