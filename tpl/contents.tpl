@@ -5,11 +5,15 @@
             <div class="panel-body">
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
-                        <label for="filename">Filename</label>
+                        <label for="filename">File</label>
                         <input type="text" class="form-control" id="filename" name="filename" value="{{{filename}}}">
                     </div>
                     <div class="form-group">
-                        <label for="pkgname">Package name</label>
+                        <label for="path">Path</label>
+                        <input type="text" class="form-control" id="path" name="path" value="{{{path}}}">
+                    </div>
+                    <div class="form-group">
+                        <label for="pkgname">Package</label>
                         <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{pkgname}}}">
                     </div>
                     <div class="form-group">

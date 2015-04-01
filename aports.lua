@@ -23,22 +23,25 @@ local ContentsRenderer = class("ContentsRenderer", turbo.web.RequestHandler)
 
 function ContentsRenderer:get()
     local args = {
-        filename = self:get_argument("filename","", true),
+        filename = self:get_argument("filename", "", true),
+        path = self:get_argument("path", "", true),
         pkgname = self:get_argument("pkgname", "", true),
         arch = self:get_argument("arch", "x86", true),
         page = tonumber(self:get_argument("page", 1, true)),
     }
     -- assign different variables for db query
     local fname = (args.filename == "") and "%" or args.filename
+    local paname = (args.path == "") and "%" or args.path
     local pname = (args.pkgname == "") and "%" or args.pkgname
     local table = {}
     if not (fname == "%" and pname == "%") then
-        table.rows = QueryContents(fname, pname, args.arch, args.page)
+        table.rows = QueryContents(fname, paname, pname, args.arch, args.page)
         local rows = (table.rows ~= nil) and (#table.rows) or 0
         table.pager = CreatePagerUri(args, rows)
     end
     table.filename = args.filename
     table.pkgname = args.pkgname
+    table.path = args.path
     table[args.arch] = true
     table.contents = true
     table.pkgname = args.pkgname
@@ -104,12 +107,12 @@ function PackageRenderer:get(arch, name)
     self:write(page)
 end
 
-function QueryContents(filename, pkgname, arch, page)
+function QueryContents(filename, path, pkgname, arch, page)
     require('DBI')
     local offset = (tonumber(page) == nil) and 0 or tonumber(page)*50
     local dbh = assert(DBI.Connect('SQLite3', 'db/filelist.db'))
-    local sth = assert(dbh:prepare('select * from filelist where file like ? and pkgname like ? and arch like ? limit ?,50'))
-    sth:execute(filename, pkgname, arch, (page - 1) * 50)
+    local sth = assert(dbh:prepare('select * from filelist where file like ? and path like ? and pkgname like ? and arch like ? limit ?,50'))
+    sth:execute(filename, path, pkgname, arch, (page - 1) * 50)
     local r = {}
     for row in sth:rows(true) do
         r[#r + 1] = {
