@@ -9,6 +9,16 @@ function string.begins(str, prefix)
     return str:sub(1,#prefix)==prefix
 end
 
+function urlencode(str)
+    if (str) then
+        str = string.gsub (str, "\n", "\r\n")
+        str = string.gsub (str, "([^%w ])",
+        function (c) return string.format ("%%%02X", string.byte(c)) end)
+        str = string.gsub (str, " ", "+")
+    end
+    return str
+end
+
 function human_bytes(bytes)
     local mult = 10^(2)
     local size = { 'B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB' }
@@ -241,6 +251,7 @@ function CreatePagerUri(args, rows)
             end
             n[#n + 1] = get.."="..(value+1)
         else
+            value = urlencode(value)
             p[#p + 1] = get.."="..(value)
             n[#n + 1] = get.."="..(value)
         end
