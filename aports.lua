@@ -98,7 +98,7 @@ function PackageRenderer:get(repo, arch, name)
         table.size = human_bytes(table.size)
         table.deps = QueryDeps(table.deps, arch)
         table.deps_qty = (table.deps ~= nil) and #table.deps or "0"
-        table.reqbys = QueryRequiredBy(table.provides, arch)
+        table.reqbys = QueryRequiredBy(table.provides, arch, name)
         table.reqbys_qty = (table.reqbys ~= nil) and #table.reqbys or "0"
         table.subpkgs = QuerySubPackages(table.origin, table.name, arch)
         table.subpkgs_qty = (table.subpkgs ~= nil) and #table.subpkgs or "0"
@@ -197,11 +197,12 @@ function QueryDeps(deps, arch)
     end
 end
 
-function QueryRequiredBy(provides, arch)
+function QueryRequiredBy(provides, arch, name)
     require('DBI')
     local names = {}
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name from apkindex where deps like ? and arch like ?'))
+    local sth = assert(dbh:prepare('select name,deps from apkindex where deps like ? and arch like ?'))
+    -- lookup deps based on provides
     for _,d in pairs (provides:split(" ")) do
         if d:begins('so:') then
             d = string.gsub(d, '=.*', '')
@@ -213,7 +214,17 @@ function QueryRequiredBy(provides, arch)
             end
         end
     end
+    -- lookup deps based on pkgname
+    sth:execute("%"..name.."%", arch)
+    for row in sth:rows(true) do
+        if row ~= nil then
+            if turbo.util.is_in(name, row.deps:split(" ")) then
+                names[row.name] = row.name
+            end
+        end
+    end
     sth:close()
+    -- reindex table for mustage templating
     local r = {}
     for _,name in pairs (names) do
         r[#r+1] = {reqby=name}
