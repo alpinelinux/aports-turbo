@@ -175,22 +175,34 @@ function QueryDeps(deps, arch)
     require('DBI')
     local names = {}
     local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name from apkindex where provides like ? and arch like ?'))
+    local sth1 = assert(dbh:prepare('select name,repo from apkindex where provides like ? and arch like ?'))
+    local sth2 = assert(dbh:prepare('select repo from apkindex where name like ? limit 1'))
     for _,k in pairs (deps:split(" ")) do
+        -- resolve so deps
         if k:begins('so:') then
-            sth:execute("%"..k.."%", arch)
-            local l = sth:fetch(true)
+            sth1:execute("%"..k.."%", arch)
+            local l = sth1:fetch(true)
             if l ~= nil then
-                names[l.name] = l.name:gsub('=.*', '')
+                names[l.name] = l.repo
             end
+        -- get repo from pkgname, in case of multiple results (same pkgname)
+        -- we use the first result
         else
-            names[k] = k:gsub('=.*', '')
+            sth2:execute(k)
+            local m = sth2:fetch(true)
+            print(inspect(k))
+            print(inspect(m))
+            if m ~= nil then
+                names[k] = m.repo
+            end
         end
     end
-    sth:close()
+    sth1:close()
+    sth2:close()
+    -- reindex table for mustage templating
     local r = {}
-    for _,name in pairs (names) do
-        r[#r+1] = {dep=name}
+    for name,repo in pairs (names) do
+        r[#r+1] = {dep=name:gsub('=.*', ''), repo=repo}
     end
     if next(r) ~= nil then
         return r
