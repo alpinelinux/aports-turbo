@@ -190,8 +190,6 @@ function QueryDeps(deps, arch)
         else
             sth2:execute(k)
             local m = sth2:fetch(true)
-            print(inspect(k))
-            print(inspect(m))
             if m ~= nil then
                 names[k] = m.repo
             end
