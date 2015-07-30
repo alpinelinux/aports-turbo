@@ -3,7 +3,10 @@
 -- lua turbo application
 
 local turbo = require "turbo"
-local inspect = require "inspect"
+local dbi = require "DBI"
+
+local apkindex = assert(dbi.DBI.Connect('SQLite3', 'db/apkindex.db'))
+local filelist = assert(dbi.DBI.Connect('SQLite3', 'db/filelist.db'))
 
 function string.begins(str, prefix)
     return str:sub(1,#prefix)==prefix
@@ -118,19 +121,14 @@ function PackageRenderer:get(repo, arch, name)
 end
 
 function QueryContents(filename, path, pkgname, arch, page)
-    require('DBI')
-    local offset = (page == nil) and 0 or (page * 50)
-    local dbh = assert(DBI.Connect('SQLite3', 'db/filelist.db'))
-    local sth = assert(dbh:prepare('select * from filelist where file like ? and path like ? and pkgname like ? and arch like ? limit ?,50'))
+    local sql = [[ select * from filelist where file like ? and path like ?
+        and pkgname like ? and arch like ? limit ?,50 ]]
+    local sth = assert(filelist:prepare(sql))
     sth:execute(filename, path, pkgname, arch, (page - 1) * 50)
     local r = {}
     for row in sth:rows(true) do
-        r[#r + 1] = {
-            file = "/" .. row.path .. "/" .. row.file,
-            pkgname = row.pkgname,
-            repo = row.repo,
-            arch = row.arch,
-        }
+        row.file = "/" .. row.path .. "/" .. row.file
+        r[#r + 1] =  row
     end
     sth:close()
     if next(r) ~= nil then
@@ -139,32 +137,27 @@ function QueryContents(filename, path, pkgname, arch, page)
 end
 
 function QueryPackages(package, repo, arch, page)
-    require('DBI')
-    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name, version, url, lic, desc, arch, repo, maintainer, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and repo like ? and arch like ? ORDER BY build_time DESC limit ?,50'))
+    local sql = [[ select name as package, version, url as project,
+        lic as license, desc, arch, repo, maintainer,
+        datetime(build_time, 'unixepoch') as bdate from apkindex
+        where name like ? and repo like ? and arch like ?
+        ORDER BY build_time DESC limit ?,50 ]]
+    local sth = assert(apkindex:prepare(sql))
     sth:execute(package, repo, arch, (page - 1) * 50)
     local r = {}
     for row in sth:rows(true) do
-        r[#r+1] = {
-                package = row.name,
-                version = row.version,
-                project = row.url,
-                license = row.lic,
-                desc = row.desc,
-                arch = row.arch,
-                repo = row.repo,
-                maintainer = (row.maintainer ~= "") and string.gsub(row.maintainer, '<.*>', '') or "None",
-                bdate = row.build_time
-        }
+        row.maintainer = (row.maintainer ~= "") and
+            string.gsub(row.maintainer, '<.*>', '') or "None"
+        r[#r+1] = row
     end
     sth:close()
     return r
 end
 
 function QueryPackage(name, repo, arch)
-    require('DBI')
-    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select *, datetime(build_time, \'unixepoch\') as build_time from apkindex where name like ? and repo like ? and arch like ? limit 1'))
+    local sql = [[ select *, datetime(build_time, 'unixepoch') as build_time
+        from apkindex where name like ? and repo like ? and arch like ? limit 1 ]]
+    local sth = assert(apkindex:prepare(sql))
     sth:execute(name, repo, arch)
     local r = sth:fetch(true)
     sth:close()
@@ -172,11 +165,12 @@ function QueryPackage(name, repo, arch)
 end
 
 function QueryDeps(deps, arch)
-    require('DBI')
     local names = {}
-    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth1 = assert(dbh:prepare('select name,repo from apkindex where provides like ? and arch like ?'))
-    local sth2 = assert(dbh:prepare('select repo from apkindex where name like ? limit 1'))
+    local sql1 = [[ select name,repo from apkindex where provides like ?
+        and arch like ? ]]
+    local sth1 = assert(apkindex:prepare(sql1))
+    local sql2 = [[ select repo from apkindex where name like ? limit 1 ]]
+    local sth2 = assert(apkindex:prepare(sql2))
     for _,k in pairs (deps:split(" ")) do
         -- resolve so deps
         if k:begins('so:') then
@@ -208,10 +202,10 @@ function QueryDeps(deps, arch)
 end
 
 function QueryRequiredBy(provides, arch, name)
-    require('DBI')
     local names = {}
-    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name,deps from apkindex where deps like ? and arch like ?'))
+    local sql = [[ select name,deps from apkindex where deps like ?
+        and arch like ? ]]
+    local sth = assert(apkindex:prepare(sql))
     -- lookup deps based on provides
     for _,d in pairs (provides:split(" ")) do
         if d:begins('so:') then
@@ -245,10 +239,10 @@ function QueryRequiredBy(provides, arch, name)
 end
 
 function QuerySubPackages(origin, name, arch)
-    require('DBI')
     local names = {}
-    local dbh = assert(DBI.Connect('SQLite3', 'db/apkindex.db'))
-    local sth = assert(dbh:prepare('select name from apkindex where origin like ? and arch like ?'))
+    local sql = [[ select name from apkindex where origin like ?
+        and arch like ? ]]
+    local sth = assert(apkindex:prepare(sql))
     sth:execute(origin, arch)
     local r = {}
     for row in sth:rows(true) do
