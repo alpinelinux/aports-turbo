@@ -39,7 +39,7 @@ function ContentsRenderer:get()
         filename = self:get_argument("filename", "", true),
         path = self:get_argument("path", "", true),
         pkgname = self:get_argument("pkgname", "", true),
-        arch = self:get_argument("arch", "x86", true),
+        arch = self:get_argument("arch", "x86_64", true),
         page = tonumber(self:get_argument("page", 1, true)),
     }
     -- assign different variables for db query
@@ -68,7 +68,7 @@ local PackagesRenderer = class("PackagesRenderer", turbo.web.RequestHandler)
 function PackagesRenderer:get()
     local args = {
         package = self:get_argument("package","", true),
-        arch = self:get_argument("arch", "x86", true),
+        arch = self:get_argument("arch", "x86_64", true),
         repo = self:get_argument("repo", "all", true),
         page = tonumber(self:get_argument("page", 1, true)),
     }
