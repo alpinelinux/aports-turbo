@@ -96,7 +96,7 @@
                                 </div>
                                 <div id="collapseReqBy" class="panel-collapse collapse">
                                     <ul class="list-group">{{#reqbys}}
-                                        <li class="list-group-item"><a href="/package/{{{repo}}}/{{{arch}}}/{{{reqby}}}">{{{reqby}}}</a></li>{{/reqbys}}{{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
+                                        <li class="list-group-item"><a href="/package/{{{repo}}}/{{{arch}}}/{{{name}}}">{{{name}}}</a></li>{{/reqbys}}{{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
                                     </ul>
                                 </div>
                             </div>

@@ -203,7 +203,7 @@ end
 
 function QueryRequiredBy(provides, arch, name)
     local names = {}
-    local sql = [[ select name,deps from apkindex where deps like ?
+    local sql = [[ select name,deps,repo from apkindex where deps like ?
         and arch like ? ]]
     local sth = assert(apkindex:prepare(sql))
     -- lookup deps based on provides
@@ -211,30 +211,30 @@ function QueryRequiredBy(provides, arch, name)
         if d:begins('so:') then
             d = string.gsub(d, '=.*', '')
             sth:execute("%"..d.."%", arch)
-            for row in sth:rows(true) do
-                if row ~= nil then
-                    names[row.name] = row.name
+            for r in sth:rows(true) do
+                if r ~= nil then
+                    names[r.name .. r.repo] = {repo=r.repo,name=r.name}
                 end
             end
         end
     end
     -- lookup deps based on pkgname
     sth:execute("%"..name.."%", arch)
-    for row in sth:rows(true) do
-        if row ~= nil then
-            if turbo.util.is_in(name, row.deps:split(" ")) then
-                names[row.name] = row.name
+    for r in sth:rows(true) do
+        if r ~= nil then
+            if turbo.util.is_in(name, r.deps:split(" ")) then
+                names[r.repo .. r.name] = {repo=r.repo,name=r.name}
             end
         end
     end
     sth:close()
-    -- reindex table for mustage templating
-    local r = {}
-    for _,name in pairs (names) do
-        r[#r+1] = {reqby=name}
+    -- reindex table for mustache templating
+    local s = {}
+    for _,rn in pairs (names) do
+        s[#s+1] = {name=rn.name,repo=rn.repo}
     end
-    if next(r) ~= nil then
-        return r
+    if next(s) ~= nil then
+        return s
     end
 end
 
