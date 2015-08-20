@@ -5,7 +5,7 @@ This application makes use of the Turbo (Lua) framework. You can find more infor
 
 On Alpine Linux it should be enough to install turbo by: 
 
-apk add lua-turbo lua-dbi-sqlite
+apk add lua-turbo lua-dbi-sqlite lua-lustache lua-socket
 
 set config options in conf.lua
 
