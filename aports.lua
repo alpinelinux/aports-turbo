@@ -827,6 +827,7 @@ function main()
         {"^/package/(.*)/(.*)/(.*)$", PackageRenderer, {alert=alert}},
         {"^/flag/(.*)/(.*)/(.*)$", FlaggedRenderer, {mail=mail, alert=alert}},
         {"/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
+        {"/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
     }):listen(conf.port)
     turbo.ioloop.instance():start()
 end
