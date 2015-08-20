@@ -6,22 +6,30 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <label for="filename">File</label>
-                        <input type="text" class="form-control" id="filename" name="filename" value="{{{filename}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="filename" name="filename" value="{{{form.filename}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="path">Path</label>
-                        <input type="text" class="form-control" id="path" name="path" value="{{{path}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="path" name="path" value="{{{form.path}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
-                        <label for="pkgname">Package</label>
-                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{pkgname}}}" placeholder="use % as wildcard">
+                        <label for="package">Package</label>
+                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{form.name}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
-                        <label for="arch">Architecture</label>
+                        <label for="repo">Repo</label>
+                        <select name="repo" class="form-control" id="repo">
+                        {{#form.repo}}
+                            <option {{{selected}}} >{{{text}}}</option>
+                        {{/form.repo}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="arch">Arch</label>
                         <select name="arch" class="form-control" id="arch">
-                            <option{{#x86}} selected {{/x86}}>x86</option>
-                            <option{{#x86_64}} selected {{/x86_64}}>x86_64</option>
-                            <option{{#armhf}} selected {{/armhf}}>armhf</option>
+                        {{#form.arch}}
+                            <option {{{selected}}} >{{{text}}}</option>
+                        {{/form.arch}}
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>
@@ -34,30 +42,30 @@
                         <th>Package name</th>
                         <th>Repository</th>
                         <th>Architecture</th>
-                    </tr>{{#rows}}
+                    </tr>
+                    {{#contents}}
                     <tr>
                         <td>{{{file}}}</td>
-                        <td><a href="/package/{{{repo}}}/{{{arch}}}/{{{pkgname}}}">{{{pkgname}}}</a></td>
+                        <td><a href="{{{pkgname.patch}}}">{{{pkgname.text}}}</a></td>
                         <td>{{{repo}}}</td>
                         <td>{{{arch}}}</td>
-                    </tr>{{/rows}}
-                    {{{^rows}}}
+                    </tr>
+                    {{/contents}}
+                    {{^contents}}
                     <tr>
                         <td colspan="4">No item found...</td>
                     </tr>
-                    {{{/rows}}}
+                    {{/contents}}
                 </table>
             </div>
-            <div class="panel-footer text-center">{{#pager}}
+            <div class="panel-footer text-center">
                 <nav>
-                    <ul class="pagination">{{/pager}}{{#pager}}{{#prev}}
-                        <li class=""><a href="/contents?{{{prev}}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}{{^prev}}
-                        <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}
-                        <li class="active"><a href="#">{{{page}}}</a></li>{{/pager}}{{#pager}}{{#next}}
-                        <li><a href="/contents?{{{next}}}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}{{^next}}
-                        <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}
+                    <ul class="pagination">
+                    {{#pager}}
+                    <li class="{{{class}}}"><a href="/contents?{{{args}}}">{{{page}}}</a></li>
+                     {{/pager}}
                     </ul>
-                </nav>{{/pager}}
+                </nav>
             </div>
         </div>
     </div>

@@ -25,8 +25,8 @@
         <a href="/"><img id="logo" src="/assets/alpinelinux-logo.svg" alt="Alpine Linux logo" /></a>
         <div id="pagenav">
             <nav>
-                <a href="/packages" {{#packages}}class="active"{{/packages}} >Packages</a>
-                <a href="/contents" {{#contents}}class="active"{{/contents}} >Contents</a>
+                <a href="/packages" class="{{nav.package}}" >Packages</a>
+                <a href="/contents" class="{{nav.content}}" >Contents</a>
             </nav>
         </div>
         <div id="sitenav">
@@ -37,4 +37,8 @@
                 <a href="http://forum.alpinelinux.org/forum">forums</a>
             </nav>
         </div>
-    </header>
+    </header>{{#alert}}
+    <div class="alert alert-{{{type}}} alert-dismissible" role="alert" style="margin-top: 20px;">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        {{{msg}}}
+    </div>{{/alert}}

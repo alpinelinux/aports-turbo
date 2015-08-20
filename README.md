@@ -5,10 +5,12 @@ This application makes use of the Turbo (Lua) framework. You can find more infor
 
 On Alpine Linux it should be enough to install turbo by: 
 
-apk add lua-turbo
+apk add lua-turbo lua-dbi-sqlite
+
+set config options in conf.lua
 
 and execute:
 
-luajit aports.lua
+turbovisor aports.lua --ignore ./db/persistent
 
-A webserver should be listening on port number 8888.
+A webserver should be listening on configured port.

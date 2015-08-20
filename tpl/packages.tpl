@@ -1,4 +1,5 @@
 {{{header}}}
+    <script>$(document).ready(function(){$('[data-toggle="tooltip"]').tooltip({container: 'html'});});</script>
     <div id="main">
         <div class="panel panel-default">
             <div class="panel-heading">Search for packages</div>
@@ -6,22 +7,22 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <label for="package">Package name</label>
-                        <input type="text" class="form-control" id="package" name="package" value="{{{package}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="name" name="name" value="{{{form.name}}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="repo">Repository</label>
                         <select name="repo" class="form-control" id="repo">
-                            <option{{{#all}}} selected {{{/all}}}>all</option>
-                            <option{{{#main}}} selected {{{/main}}}>main</option>
-                            <option{{{#testing}}} selected {{{/testing}}}>testing</option>
+                        {{#form.repo}}
+                            <option {{{selected}}} >{{{text}}}</option>
+                        {{/form.repo}}
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="arch">Architecture</label>
                         <select name="arch" class="form-control" id="arch">
-                            <option{{#x86}} selected {{/x86}}>x86</option>
-                            <option{{#x86_64}} selected {{/x86_64}}>x86_64</option>
-                            <option{{#armhf}} selected {{/armhf}}>armhf</option>
+                        {{#form.arch}}
+                            <option {{{selected}}} >{{{text}}}</option>
+                        {{/form.arch}}
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>
@@ -38,34 +39,49 @@
                         <th>Repository</th>
                         <th>Maintainer</th>
                         <th>Build date</th>
-                    </tr>{{#rows}}
+                    </tr>
+                    {{#pkgs}}
                     <tr>
-                        <td class="package" title="{{{desc}}}"><a href="/package/{{{repo}}}/{{{arch}}}/{{{package}}}">{{{package}}}</a></td>
-                        <td class="version">{{{version}}}</td>
-                        <td class="url"><a href="{{{project}}}">URL</a></td>
-                        <td class="license">{{{license}}}</td>
+                        <td class="package">
+                            <a data-toggle="tooltip" title="{{{name.title}}}" href="{{{name.path}}}">{{{name.text}}}</a>
+                        </td>
+                        {{#flagged}}
+                        <td class="version">
+                            <strong>
+                                <a class="text-danger" href="#" data-toggle="tooltip" title="Flagged: {{{flagged.date}}}">{{{version.text}}}</a>
+                            </strong>
+                        </td>
+                        {{/flagged}}
+                        {{^flagged}}
+                        <td class="version">
+                            <strong>
+                                <a class="text-success" href="{{{version.path}}}" data-toggle="tooltip" title="{{{version.title}}}">{{{version.text}}}</a>
+                            </strong>
+                        </td>
+                        {{/flagged}}
+                        <td class="url"><a href="{{{url.path}}}">{{{url.text}}}</a></td>
+                        <td class="license">{{{lic}}}</td>
                         <td class="arch">{{{arch}}}</td>
                         <td class="repo">{{{repo}}}</td>
                         <td class="maintainer">{{{maintainer}}}</td>
-                        <td class="bdate">{{{bdate}}}</td>
-                    </tr>{{/rows}}
-                    {{{^rows}}}
+                        <td class="bdate">{{{build_time}}}</td>
+                    </tr>
+                    {{/pkgs}}
+                    {{^pkgs}}
                     <tr>
                         <td colspan="8">No item found...</td>
                     </tr>
-                    {{{/rows}}}
+                    {{/pkgs}}
                 </table>
             </div>
-            <div class="panel-footer text-center">{{#pager}}
+            <div class="panel-footer text-center">
                 <nav>
-                    <ul class="pagination">{{/pager}}{{#pager}}{{#prev}}
-                        <li class=""><a href="/packages?{{{prev}}}" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}{{^prev}}
-                        <li class="disabled"><a href="" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a></li>{{/prev}}{{/pager}}{{#pager}}
-                        <li class="active"><a href="#">{{{page}}}</a></li>{{/pager}}{{#pager}}{{#next}}
-                        <li><a href="/packages?{{{next}}}" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}{{^next}}
-                        <li class="disabled"><a href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a></li>{{/next}}{{/pager}}{{#pager}}
+                    <ul class="pagination">
+                    {{#pager}}
+                    <li class="{{{class}}}"><a href="/packages?{{{args}}}">{{{page}}}</a></li>
+                     {{/pager}}
                     </ul>
-                </nav>{{/pager}}
+                </nav>
             </div>
         </div>
     </div>

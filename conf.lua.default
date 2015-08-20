@@ -1,0 +1,25 @@
+local conf = {}
+
+-- global configuration
+conf.port    = 8888
+-- template location
+conf.tpl = "./tpl"
+-- google recaptcha settings
+conf.rc = {}
+-- set sitekey to false to disable recaptcha
+conf.rc.sitekey = false
+conf.rc.secret  = ""
+-- mailer settings
+conf.mail = {}
+-- from email address
+conf.mail.from = "me@example.org" 
+conf.mail.server = "mail.example.org"
+conf.mail.domain = "pkgs.example.org"
+-- settings for pagers
+conf.pager = {}
+-- how many entries in page
+conf.pager.limit = 50
+-- the left and right offset of the pager
+conf.pager.offset = 3
+
+return conf
