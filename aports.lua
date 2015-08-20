@@ -723,6 +723,9 @@ local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
 function PackageRenderer:get(repo, arch, name)
     local m = {}
     local pkg = QueryPackage(name, repo, arch)
+    if not pkg then
+        error(turbo.web.HTTPError(404, "404 Page not found."))
+    end
     m.nav = {package="active", content=""}
     m.alert = self.options.alert:get_msg()
     m.pkg = PackageModel(pkg)
