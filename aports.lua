@@ -6,18 +6,17 @@ local conf = dofile("conf.lua")
 -- lua turbo application
 TURBO_SSL = true
 local turbo = require "turbo"
-local dbi = require "DBI"
+local sqlite3 = require('lsqlite3')
 local smtp = require("socket.smtp")
 -- we use lustache instead of turbo's limited mustache engine
 local lustache = require("lustache")
-
 --
 -- open databases. these will be overwritten by our aports scripts.
 -- flagged is persistent and should not be monitored by turbovisor.
 ---
-local apkindex = assert(dbi.DBI.Connect('SQLite3', 'db/apkindex.db'))
-local filelist = assert(dbi.DBI.Connect('SQLite3', 'db/filelist.db'))
-local flagged  = assert(dbi.DBI.Connect('SQLite3', 'db/persistent/flagged.db'))
+local filelist = sqlite3.open('db/filelist.db')
+local apkindex = sqlite3.open('db/apkindex.db')
+local flagged  = sqlite3.open('db/persistent/flagged.db')
 
 --
 -- usefule lua helper functions
@@ -219,130 +218,152 @@ function CreatePager(total, limit, current, offset)
     return r
 end
 
+-- constuct a minimized sql query
+function CreateSelectQuery(select, from, operators)
+    local result = { args = {}, sql = "" }
+    local exclude = {"%", "", "all"}
+    result.sql = string.format("select %s from %s", select, from)
+    local r = {}
+    for k,v in pairs(operators) do
+        if not (turbo.util.is_in(v, exclude)) then
+            if string.match(v, "%%") then
+                r[#r+1] = string.format([[%s like ?]],k)
+            else
+                r[#r+1] = string.format([[%s=?]],k)
+            end
+            table.insert(result.args, v)
+        end
+    end
+    result.sql = next(r) and
+        string.format("select %s from %s where %s", select, from, table.concat(r, " and "))
+        or string.format("select %s from %s", select, from)
+    return result
+end
+
+--
 -- SQlite section
 --
 
 -- get the flagged data for specific origin in repo and specified version
 function QueryFlaggedStatus(origin, repo, version)
-    local sql = [[ select *, date(date, 'unixepoch') as date from flagged
-        where origin like ? and repo like ? and version like ? ]]
-    local sth = assert(flagged:prepare(sql))
-    sth:execute(origin, repo, version)
-    local r = sth:fetch(true)
-    sth:close()
-    return r
+    local r = {}
+    local ops = {origin=origin, repo=repo, version=version}
+    local res = CreateSelectQuery("*", "flagged", ops)
+    local stmt = flagged:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
+        r[#r+1] = row
+    end
+    stmt:finalize()
+    return next(r) and r[1] or false
 end
 
 -- get all packages whith deps and arch
-function QueryRequiredBy(dep, arch)
+function QueryRequiredBy(deps, arch)
     local r = {}
-    local sql = [[ select * from apkindex where deps like ?
-        and arch like ? ]]
-    local sth = assert(apkindex:prepare(sql))
-    sth:execute(dep, arch)
-    for row in sth:rows(true) do
+    local ops = {deps=deps, arch=arch}
+    local res = CreateSelectQuery("*", "apkindex", ops)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
         r[#r+1] = row
     end
+    stmt:finalize()
     return r
 end
 
--- load a package. If arch is false we load the fist matching package
--- to fetch fields shared by each arch
+-- get a pacakge or return false if not found
 function QueryPackage(name, repo, arch)
-    local sql,sth,r
-    arch = (arch) and arch or "%"
-    sql = [[ select *, datetime(build_time, 'unixepoch') as build_time
-        from apkindex where name like ? and repo like ? and arch like ? limit 1 ]]
-    sth = assert(apkindex:prepare(sql))
-    sth:execute(name, repo, arch)
-    r = sth:fetch(true)
-    sth:close()
-    return r
+    local r = {}
+    local ops = {name=name, repo=repo, arch=arch}
+    local res = CreateSelectQuery("*", "apkindex", ops)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
+        r[#r+1] = row
+    end
+    stmt:finalize()
+    return next(r) and r[1] or false
 end
 
 -- get all packages which have certain provides
 function QueryDepends(provides, name, arch)
     local r = {}
-    local sql = [[ select * from apkindex where provides like ? and name like ?
-        and arch like ? ]]
-    local sth = assert(apkindex:prepare(sql))
-    sth:execute(provides, name, arch)
-    for row in sth:rows(true) do
+    local ops = {provides=provides, name=name, arch=arch}
+    local res = CreateSelectQuery("*", "apkindex", ops)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
         r[#r+1] = row
     end
+    stmt:finalize()
     return r
 end
 
 -- get the file list from database for a specific package
-function QueryContents(filename, path, pkgname, arch, repo, page)
+function QueryContents(file, path, pkgname, arch, repo, page)
     local r = {}
-    local sql = [[ select * from filelist where file like ? and path like ?
-        and pkgname like ? and arch like ? and repo like ? limit ?,50 ]]
-    local sth = assert(filelist:prepare(sql))
-    local filename = (filename == "") and "%" or filename
-    local path = (path == "") and "%" or path
-    local pkgname = (pkgname == "") and "%" or pkgname
-    repo = (repo == "all") and "%" or repo
-    sth:execute(filename, path, pkgname, arch, repo, (page - 1) * 50)
-    for row in sth:rows(true) do
+    local args = {file=file,path=path,pkgname=pkgname,arch=arch,repo=repo}
+    local res = CreateSelectQuery("*", "filelist", args)
+    res.sql = string.format("%s LIMIT ?,%s", res.sql, conf.pager.limit)
+    table.insert(res.args, (page - 1) * conf.pager.limit)
+    local stmt = filelist:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
         r[#r+1] = row
     end
-    sth:close()
+    stmt:finalize()
     return r
 end
 
 -- count entries found by our contents query
-function GetContentsCount(filename, path, pkgname, arch, repo)
-    local sql = [[ select count(*) as qty from filelist where file like ?
-        and path like ? and pkgname like ? and arch like ? and repo like ? ]]
-    local sth = assert(filelist:prepare(sql))
-    local filename = (filename == "") and "%" or filename
-    local path = (path == "") and "%" or path
-    local pkgname = (pkgname == "") and "%" or pkgname
-    local repo = (repo == "all") and "%" or repo
-    sth:execute(filename, path, pkgname, arch, repo)
-    r = sth:fetch(true)
-    sth:close()
-    return r.qty
+function GetContentsCount(file, path, pkgname, arch, repo)
+    args = {file=file, path=path, pkgname=pkgname, arch=arch, repo=repo}
+    local res = CreateSelectQuery("count(*)", "filelist", args)
+    local stmt = filelist:prepare(res.sql)
+    stmt:bind_names(res.args)
+    stmt:step()
+    local r = stmt:get_value(0)
+    stmt:finalize()
+    return r
 end
 
 -- get a list of packages
 function QueryPackages(name, repo, arch, page)
     local r = {}
-    if (name=="") then name="%" end
-    if (repo=="all") then repo="%" end
-    local sql = [[ select * from apkindex where name like ? and repo like ?
-        and arch like ? ORDER BY build_time DESC limit ?,50 ]]
-    local sth = assert(apkindex:prepare(sql))
-    sth:execute(name, repo, arch, (page - 1) * 50)
-    for row in sth:rows(true) do
+    local ops = {name=name, repo=repo, arch=arch}
+    local res = CreateSelectQuery("*", "apkindex", ops)
+    res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
+    table.insert(res.args, (page - 1) * conf.pager.limit)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
         r[#r+1] = row
     end
-    sth:close()
+    stmt:finalize()
     return r
 end
 
 -- count query to help our pager
 function GetPackagesCount(name, repo, arch)
-    local sql = [[ select count(*) as qty from apkindex where name like ?
-        and repo like ? and arch like ? ]]
-    local sth = assert(apkindex:prepare(sql))
-    repo = (repo=="all") and "%" or repo
-    name = (name=="") and "%" or name
-    sth:execute(name, repo, arch)
-    r = sth:fetch(true)
-    sth:close()
-    return r.qty
+    local ops = {name=name, repo=repo, arch=arch}
+    local res = CreateSelectQuery("count(*)", "apkindex", ops)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    stmt:step()
+    local r = stmt:get_value(0)
+    stmt:finalize()
+    return r
 end
 
 -- add an origin entry to the flagged db
 function FlagOrigin(repo, origin, version, message)
     local sql = [[ insert into flagged(repo, origin, version, date, message)
         values(?, ?, ?, strftime('%s', 'now'), ?) ]]
-    local sth = assert(flagged:prepare(sql))
-    sth:execute(repo, origin, version, message)
-    sth:close()
-    local r = flagged:commit()
+    local stmt = flagged:prepare(sql)
+    stmt:bind_values(repo, origin, version, message)
+    local r = stmt:step()
+    stmt:finalize()
     return r
 end
 
@@ -350,41 +371,32 @@ end
 -- with (optional) arch
 function QueryOrigin(repo, origin, arch)
     local r = {}
-    arch = (arch) and arch or "%"
-    local sql = [[ select * from apkindex where repo like ? and origin like ?
-        and arch like ? ]]
-    local sth = assert(apkindex:prepare(sql))
-    sth:execute(repo, origin, arch)
-    for row in sth:rows(true) do
+    local ops = {repo=repo, origin=origin, arch=arch}
+    local res = CreateSelectQuery("*", "apkindex", ops)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
         r[#r+1] = row
     end
-    sth:close()
+    stmt:finalize()
     return r
 end
 
 -- get unique archs
 function QueryArchs()
     local r = {}
-    local sql = [[ select distinct arch from apkindex ]]
-    local sth = assert(apkindex:prepare(sql))
-    sth:execute()
-    for row in sth:rows(true) do
+    for row in apkindex:nrows("select distinct arch from apkindex") do
         r[#r+1] = row
     end
-    sth:close()
     return r
 end
 
 -- get unique repos
 function QueryRepos()
     local r = {}
-    local sql = [[ select distinct repo from apkindex ]]
-    local sth = assert(apkindex:prepare(sql))
-    sth:execute()
-    for row in sth:rows(true) do
+    for row in apkindex:nrows("select distinct repo from apkindex") do
         r[#r+1] = row
     end
-    sth:close()
     return r
 end
 
@@ -395,25 +407,27 @@ end
 function PagerModel(args, total)
     local result = {}
     local pager = CreatePager(total, conf.pager.limit, args.page, conf.pager.offset)
-    table.insert(pager, 1, "&laquo;")
-    table.insert(pager, "&raquo;")
-    for k,p in ipairs(pager) do
-        local r = {}
-        for g,v in pairs(args) do
-            if (g=="page") then
-                if p == "&laquo;" then
-                    v=1
-                elseif p == "&raquo;" then
-                    v=pager.last
-                else
-                    v=p
+    if pager.last > conf.pager.offset then
+        table.insert(pager, 1, "&laquo;")
+        table.insert(pager, "&raquo;")
+        for k,p in ipairs(pager) do
+            local r = {}
+            for g,v in pairs(args) do
+                if (g=="page") then
+                    if p == "&laquo;" then
+                        v=1
+                    elseif p == "&raquo;" then
+                        v=pager.last
+                    else
+                        v=p
+                    end
                 end
+                r[#r+1]=string.format("%s=%s",g,v)
             end
-            r[#r+1]=string.format("%s=%s",g,v)
+            path=table.concat(r, '&amp;')
+            class = (args.page == p) and "active" or ""
+            table.insert(result, {args=path, class=class, page=p})
         end
-        path=table.concat(r, '&amp;')
-        class = (args.page == p) and "active" or ""
-        table.insert(result, {args=path, class=class, page=p})
     end
     return result
 end
@@ -584,7 +598,7 @@ function PackagesModel(pkgs)
         r[k].maintainer = format_maintainer(v.maintainer)
         r[k].build_time = format_date(v.build_time)
         local fs = QueryFlaggedStatus(v.origin, v.repo, v.version)
-        if (fs) then r[k].flagged = {date=fs.date} end
+        if (fs) then r[k].flagged = {date=format_date(fs.date)} end
     end
     return r
 end
@@ -674,18 +688,12 @@ function ContentsRenderer:get()
         repo = self:get_argument("repo", "all", true),
         page = tonumber(self:get_argument("page", 1, true))
     }
-    local d = {
-        filename = (a.filename == "") and "%" or a.filename,
-        path = (a.path == "") and "%" or a.path,
-        pkgname = (a.pkgname == "") and "%" or a.pkgname,
-        repo = (a.repo == "all") and "%" or a.repo,
-    }
     m.nav = {package="", content="active"}
     m.alert = self.options.alert:get_msg()
     m.form = ContentsFormModel(a.filename, a.path, a.pkgname, a.repo, a.arch)
     if not (a.filename == "" and a.path == ""  and a.pkgname == "") then
-        local contents = QueryContents(d.filename, d.path, d.pkgname, a.arch, d.repo, a.page)
-        local count = GetContentsCount(d.filename, d.path, d.pkgname, a.arch, d.repo)
+        local contents = QueryContents(a.filename, a.path, a.pkgname, a.arch, a.repo, a.page)
+        local count = GetContentsCount(a.filename, a.path, a.pkgname, a.arch, a.repo)
         m.contents = ContentsModel(contents)
         m.pager = PagerModel(a, count)
     end
@@ -741,9 +749,9 @@ function PackageRenderer:get(repo, arch, name)
 end
 
 -- flagged renderer, to display the flag form
-local FlaggedRenderer = class("FlaggedRenderer", turbo.web.RequestHandler)
+local FlagRenderer = class("FlagRenderer", turbo.web.RequestHandler)
 
-function FlaggedRenderer:get(repo, origin, version)
+function FlagRenderer:get(repo, origin, version)
     local args = {"flag",repo,origin,version}
     local pkg = QueryPackage(origin, repo)
     --trow an http error if this package doesnt exists
@@ -758,11 +766,11 @@ function FlaggedRenderer:get(repo, origin, version)
     m.alert = self.options.alert:get_msg()
     m.header = lustache:render(tpl("header.tpl"), m)
     m.footer = lustache:render(tpl("footer.tpl"), m)
-    self:write(lustache:render(tpl("flagged.tpl"), m))
+    self:write(lustache:render(tpl("flag.tpl"), m))
 end
 
 -- flagged post function when submitting the form
-function FlaggedRenderer:post(repo, origin, version)
+function FlagRenderer:post(repo, origin, version)
     local alert = "Sucessfully flagged packages"
     local type  = "danger"
     local args = {"flag",repo,origin,version}
@@ -817,6 +825,7 @@ function FlaggedRenderer:post(repo, origin, version)
     self:redirect("/"..table.concat(args, "/"), true)
 end
 
+
 function main()
     local alert = Alert()
     local mail = SendMail()
@@ -825,7 +834,7 @@ function main()
         {"^/contents$", ContentsRenderer, {alert=alert}},
         {"^/packages$", PackagesRenderer, {alert=alert}},
         {"^/package/(.*)/(.*)/(.*)$", PackageRenderer, {alert=alert}},
-        {"^/flag/(.*)/(.*)/(.*)$", FlaggedRenderer, {mail=mail, alert=alert}},
+        {"^/flag/(.*)/(.*)/(.*)$", FlagRenderer, {mail=mail, alert=alert}},
         {"/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
         {"/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
     }):listen(conf.port)

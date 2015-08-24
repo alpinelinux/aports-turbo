@@ -39,14 +39,14 @@
                 <table class="table table-striped table-bordered table-condensed" data-toggle="table">
                     <tr>
                         <th>File</th>
-                        <th>Package name</th>
+                        <th>Package</th>
                         <th>Repository</th>
                         <th>Architecture</th>
                     </tr>
                     {{#contents}}
                     <tr>
                         <td>{{{file}}}</td>
-                        <td><a href="{{{pkgname.patch}}}">{{{pkgname.text}}}</a></td>
+                        <td><a href="{{{pkgname.path}}}">{{{pkgname.text}}}</a></td>
                         <td>{{{repo}}}</td>
                         <td>{{{arch}}}</td>
                     </tr>
