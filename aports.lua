@@ -552,7 +552,7 @@ function PackageModel(pkg)
         r[#r+1] = {head="Maintainer",data=format_maintainer(pkg.maintainer)}
     end
     if (pkg.build_time ~= "") then
-        r[#r+1] = {head="Build Time",data=pkg.build_time}
+        r[#r+1] = {head="Build Time",data=format_date(pkg.build_time)}
     end
     if (pkg.commit ~= "") then
         r[#r+1] = {
