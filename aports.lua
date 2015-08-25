@@ -261,6 +261,7 @@ end
 function QueryFlagged(ops)
     local r = {}
     local res = CreateSelectQuery("*", "flagged", ops)
+    res.sql = res.sql .. " ORDER BY date DESC"
     local stmt = flagged:prepare(res.sql)
     stmt:bind_names(res.args)
     for row in stmt:nrows() do
@@ -896,7 +897,7 @@ function main()
     local alert = Alert()
     local mail = SendMail()
     turbo.web.Application({
-        {"^/$", turbo.web.RedirectHandler, conf.url.."/packages"},
+        {"^/$", turbo.web.RedirectHandler, "/packages"},
         {"^/contents$", ContentsRenderer, {alert=alert}},
         {"^/packages$", PackagesRenderer, {alert=alert}},
         {"^/package/(.*)/(.*)/(.*)$", PackageRenderer, {alert=alert}},

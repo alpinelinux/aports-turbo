@@ -4,8 +4,6 @@ local conf = {}
 conf.port    = 8888
 -- template location
 conf.tpl = "./tpl"
--- base uri to access application (used to redirect / to)
-conf.url = "https://domain.tld"
 -- google recaptcha settings
 conf.rc = {}
 -- set sitekey to false to disable recaptcha
