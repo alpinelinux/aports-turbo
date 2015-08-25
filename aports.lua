@@ -261,7 +261,6 @@ end
 function QueryFlagged(ops)
     local r = {}
     local res = CreateSelectQuery("*", "flagged", ops)
-    print(inspect(res))
     local stmt = flagged:prepare(res.sql)
     stmt:bind_names(res.args)
     for row in stmt:nrows() do
@@ -702,7 +701,6 @@ end
 
 function FlaggedModel(pkgs, arch)
     local r = {}
-    print(inspect(pkgs))
     for k,v in ipairs(pkgs) do
         r[k] = {}
         r[k].origin = {
