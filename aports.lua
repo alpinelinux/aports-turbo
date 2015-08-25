@@ -258,6 +258,19 @@ function QueryFlaggedStatus(origin, repo, version)
     return next(r) and r[1] or false
 end
 
+function QueryFlagged(ops)
+    local r = {}
+    local res = CreateSelectQuery("*", "flagged", ops)
+    print(inspect(res))
+    local stmt = flagged:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
+        r[#r+1] = row
+    end
+    stmt:finalize()
+    return r
+end
+
 -- get all packages whith deps and arch
 function QueryRequiredBy(deps, arch)
     local r = {}
@@ -273,9 +286,9 @@ function QueryRequiredBy(deps, arch)
 end
 
 -- get a pacakge or return false if not found
-function QueryPackage(name, repo, arch)
+function QueryPackage(ops)
     local r = {}
-    local ops = {name=name, repo=repo, arch=arch}
+    --local ops = {name=name, repo=repo, arch=arch}
     local res = CreateSelectQuery("*", "apkindex", ops)
     local stmt = apkindex:prepare(res.sql)
     stmt:bind_names(res.args)
@@ -332,6 +345,21 @@ end
 function QueryPackages(name, repo, arch, page)
     local r = {}
     local ops = {name=name, repo=repo, arch=arch}
+    local res = CreateSelectQuery("*", "apkindex", ops)
+    res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
+    table.insert(res.args, (page - 1) * conf.pager.limit)
+    local stmt = apkindex:prepare(res.sql)
+    stmt:bind_names(res.args)
+    for row in stmt:nrows() do
+        r[#r+1] = row
+    end
+    stmt:finalize()
+    return r
+end
+
+-- get a list of packages
+function QueryPackagesFlagged(ops, page)
+    local r = {}
     local res = CreateSelectQuery("*", "apkindex", ops)
     res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
     table.insert(res.args, (page - 1) * conf.pager.limit)
@@ -621,6 +649,7 @@ end
 function FormArchModel(selected)
     local r = {}
     local archs = QueryArchs()
+    table.insert(archs, {arch="all"})
     for k,v in pairs(archs) do
         r[k] = {text=v.arch}
         if (v.arch == selected) then
@@ -669,6 +698,24 @@ function FlagModel(pkg)
         maintainer = format_maintainer(pkg.maintainer),
         sitekey = conf.rc.sitekey
     }
+end
+
+function FlaggedModel(pkgs, arch)
+    local r = {}
+    print(inspect(pkgs))
+    for k,v in ipairs(pkgs) do
+        r[k] = {}
+        r[k].origin = {
+            text = v.origin,
+            path = string.format("/packages?name=%s&arch=%s", v.origin, arch),
+            title = "",
+        }
+        r[k].repo = v.repo
+        r[k].version = v.version
+        r[k].date = format_date(v.date)
+        r[k].message = v.message
+    end
+    return r
 end
 
 --
@@ -730,7 +777,8 @@ local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
 
 function PackageRenderer:get(repo, arch, name)
     local m = {}
-    local pkg = QueryPackage(name, repo, arch)
+    local ops = {repo=repo, arch=arch, name=name}
+    local pkg = QueryPackage(ops)
     if not pkg then
         error(turbo.web.HTTPError(404, "404 Page not found."))
     end
@@ -753,7 +801,8 @@ local FlagRenderer = class("FlagRenderer", turbo.web.RequestHandler)
 
 function FlagRenderer:get(repo, origin, version)
     local args = {"flag",repo,origin,version}
-    local pkg = QueryPackage(origin, repo)
+    local ops = {origin=origin, repo=repo}
+    local pkg = QueryPackage(ops)
     --trow an http error if this package doesnt exists
     if not OriginExists(repo, origin, version) then
         error(turbo.web.HTTPError(404, "404 Page not found."))
@@ -825,16 +874,36 @@ function FlagRenderer:post(repo, origin, version)
     self:redirect("/"..table.concat(args, "/"), true)
 end
 
+-- flagged renderer, to display the flag form
+local FlaggedRenderer = class("FlaggedRenderer", turbo.web.RequestHandler)
+
+function FlaggedRenderer:get()
+    local m = {}
+    local name = self:get_argument("name","", true)
+    local arch = self:get_argument("arch", "x86_64", true)
+    local repo = self:get_argument("repo", "all", true)
+    local page = tonumber(self:get_argument("page", 1, true))
+    --local ops = {}
+    m.form = PackagesFormModel(name, repo, arch)
+    local ops = {origin=name,repo=repo}
+    local pkgs = QueryFlagged(ops)
+    m.pkgs = FlaggedModel(pkgs, arch)
+    m.header = lustache:render(tpl("header.tpl"), m)
+    m.footer = lustache:render(tpl("footer.tpl"), m)
+    self:write(lustache:render(tpl("flagged.tpl"), m))
+end
+
 
 function main()
     local alert = Alert()
     local mail = SendMail()
     turbo.web.Application({
-        {"^/$", turbo.web.RedirectHandler, "/packages"},
+        {"^/$", turbo.web.RedirectHandler, conf.url.."/packages"},
         {"^/contents$", ContentsRenderer, {alert=alert}},
         {"^/packages$", PackagesRenderer, {alert=alert}},
         {"^/package/(.*)/(.*)/(.*)$", PackageRenderer, {alert=alert}},
         {"^/flag/(.*)/(.*)/(.*)$", FlagRenderer, {mail=mail, alert=alert}},
+        {"^/flagged$", FlaggedRenderer, {alert=alert}},
         {"/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
         {"/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
     }):listen(conf.port)
