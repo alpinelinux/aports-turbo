@@ -533,72 +533,47 @@ function RequiredByModel(pkg)
 end
 
 function PackageModel(pkg)
-    local r = {}
-    if (pkg.name ~= "") then
-        r[#r+1] = {head="Package",data=pkg.name}
-    end
-    if (pkg.version ~= "") then
-        r[#r+1] = {head="Version",data=pkg.version}
-    end
-    if (pkg.desc ~= "") then
-        r[#r+1] = {head="Description",data=pkg.desc}
-    end
-    if (pkg.url ~= "") then
-        r[#r+1] = {
-            head="Project",
-            url={
-                path=pkg.url,
-                text=pkg.url
-            }
+    local flag = QueryFlaggedStatus(pkg.origin, pkg.repo, pkg.version)
+    if flag then
+        pkg.version = {
+            class="text-danger",
+            text=pkg.version,
+            title=string.format("Flagged: %s", format_date(flag.date)),
+            path="#"
+        }
+    else
+        pkg.version = {
+            class="text-success",
+            text=pkg.version,
+            title=string.format("Flag this package out of date"),
+            path=string.format("/flag/%s/%s/%s", pkg.repo, pkg.origin, pkg.version),
         }
     end
-    if (pkg.lic ~= "") then
-        r[#r+1] = {head="License",data=pkg.lic}
-    end
-    if (pkg.repo ~= "") then
-        r[#r+1] = {head="Repository",data=pkg.repo}
-    end
-    if (pkg.arch ~= "") then
-        r[#r+1] = {head="Arch",data=pkg.arch}
-    end
-    if (pkg.size ~= "") then
-        r[#r+1] = {head="Size",data=human_bytes(pkg.size)}
-    end
-    if (pkg.installed_size ~= "") then
-        r[#r+1] = {head="Install Size", data=human_bytes(pkg.install_size)}
-    end
-    if (pkg.origin ~= "") then
-        r[#r+1] = {
-            head="Origin",
-            url={
-                path=string.format("/package/%s/%s/%s", pkg.repo, pkg.arch, pkg.origin),
-                text=pkg.origin
-            }
-        }
-    end
-    if (pkg.maintainer ~= "") then
-        r[#r+1] = {head="Maintainer",data=format_maintainer(pkg.maintainer)}
-    end
-    if (pkg.build_time ~= "") then
-        r[#r+1] = {head="Build Time",data=format_date(pkg.build_time)}
-    end
-    if (pkg.commit ~= "") then
-        r[#r+1] = {
-            head="Commit",
-            url={
-                path=string.format("http://git.alpinelinux.org/cgit/aports/commit/?id=%s", pkg.commit),
-                text=pkg.commit
-            }
-        }
-    end
-    r[#r+1] = {
-        head="Contents",
-        url={
+    return {
+        name = pkg.name and pkg.name or "None",
+        version = pkg.version and pkg.version or "None",
+        desc = pkg.desc and pkg.desc or "None",
+        url = pkg.url and pkg.url or "None",
+        lic = pkg.lic and pkg.lic or "None",
+        repo = pkg.repo and pkg.repo or "None",
+        arch = pkg.arch and pkg.arch or "None",
+        size = pkg.size and human_bytes(pkg.size) or "None",
+        install_size = pkg.install_size and human_bytes(pkg.install_size) or "None",
+        origin = pkg.origin and {
+            path=string.format("/package/%s/%s/%s", pkg.repo, pkg.arch, pkg.origin),
+            text=pkg.origin
+        } or {path="#", text="None"},
+        maintainer = pkg.maintainer and pkg.maintainer or "None",
+        build_time = pkg.build_time and format_date(pkg.build_time) or "None",
+        commit = pkg.commit and {
+            path=string.format("http://git.alpinelinux.org/cgit/aports/commit/?id=%s", pkg.commit),
+            text=pkg.commit
+        } or {path="#", text="None"},
+        contents = {
             path=string.format("/contents?pkgname=%s&arch=%s&repo=%s", pkg.name, pkg.arch, pkg.repo),
             text="Contents of package"
-        }
+        },
     }
-    return r
 end
 
 function PackagesModel(pkgs)

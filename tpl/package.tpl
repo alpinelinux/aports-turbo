@@ -1,4 +1,5 @@
 {{{header}}}
+    <script>$(document).ready(function(){$('[data-toggle="tooltip"]').tooltip({container: 'html'});});</script>
     <div id="main">
         <div class="panel panel-default">
             <div class="panel-heading">Package details</div>
@@ -11,17 +12,66 @@
                                 <div class="panel-body">
                                     <div class="table-responsive">
                                         <table class="table table-striped table-bordered table-condensed">
-                                            {{#pkg}}
                                             <tr>
-                                                <th>{{{head}}}</th>
-                                                {{#url}}
-                                                <td><a href="{{{path}}}">{{{text}}}</a></td>
-                                                {{/url}}
-                                                {{^url}}
-                                                <td>{{{data}}}</td>
-                                                {{/url}}
+                                                <th>Package</th>
+                                                <td>{{{pkg.name}}}</td>
                                             </tr>
-                                            {{/pkg}}
+                                            <tr>
+                                                <th>Version</th>
+                                                <td>
+                                                    <strong>
+                                                        <a data-toggle="tooltip" title="{{{pkg.version.title}}}" class="{{{pkg.version.class}}}" href="{{{pkg.version.path}}}">{{{pkg.version.text}}}</a>
+                                                    <strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Description</th>
+                                                <td>{{{pkg.desc}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Project</th>
+                                                <td><a href="{{{pkg.url}}}">{{{pkg.url}}}</a></td>
+                                            </tr>
+                                            <tr>
+                                                <th>License</th>
+                                                <td>{{{pkg.lic}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Repository</th>
+                                                <td>{{{pkg.repo}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Architecture</th>
+                                                <td>{{{pkg.arch}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Size</th>
+                                                <td>{{{pkg.size}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Installed size</th>
+                                                <td>{{{pkg.install_size}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Origin</th>
+                                                <td><a href="{{{pkg.origin.path}}}">{{{pkg.origin.text}}}</a></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Maintainer</th>
+                                                <td>{{{pkg.maintainer}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Build time</th>
+                                                <td>{{{pkg.build_time}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Commit</th>
+                                                <td><a href="{{{pkg.commit.path}}}">{{{pkg.commit.text}}}</a></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Contents</th>
+                                                <td><a href="{{{pkg.contents.path}}}">{{{pkg.contents.text}}}</a></td>
+                                            </tr>
                                         </table>
                                     </div>
                                 </div>
