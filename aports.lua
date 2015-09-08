@@ -221,28 +221,6 @@ function CreatePager(total, limit, current, offset)
     return r
 end
 
--- constuct a minimized sql query
-function CreateSelectQuery(select, from, operators)
-    local result = { args = {}, sql = "" }
-    local exclude = {"%", "", "all"}
-    result.sql = string.format("select %s from %s", select, from)
-    local r = {}
-    for k,v in pairs(operators) do
-        if not (turbo.util.is_in(v, exclude)) then
-            if string.match(v, "%%") then
-                r[#r+1] = string.format([[%s like ?]],k)
-            else
-                r[#r+1] = string.format([[%s=?]],k)
-            end
-            table.insert(result.args, v)
-        end
-    end
-    result.sql = next(r) and
-        string.format("select %s from %s where %s", select, from, table.concat(r, " and "))
-        or string.format("select %s from %s", select, from)
-    return result
-end
-
 --
 -- Model section
 --
