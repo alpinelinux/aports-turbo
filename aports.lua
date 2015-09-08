@@ -5,7 +5,7 @@ conf = dofile("conf.lua")
 
 -- lua turbo application
 TURBO_SSL = true
-local turbo = require "turbo"
+turbo = require "turbo"
 
 local smtp = require("socket.smtp")
 -- we use lustache instead of turbo's limited mustache engine
@@ -16,6 +16,7 @@ local apkindex = db.apkindex()
 local filelist = db.filelist()
 local flagged = db.flagged()
 
+local mail = require("mail")
 --
 -- usefule lua helper functions
 --
@@ -91,71 +92,6 @@ function Alert:get_msg()
     local r = self.alert
     self.alert = false
     return r
-end
-
---
--- SendMail class using lua socket
---
-local SendMail = class("SendMail")
-
-function SendMail:initialize()
-    self.rcpt = {}
-    self.from = ""
-    self.headers =  { ["content-type"] = "text/plain; charset=UTF-8" }
-    self.body = ""
-end
---add an address to the reciepient table
-function SendMail:set_rcpt(rcpt)
-    local addr = validate_email(rcpt)
-    if addr then
-        table.insert(self.rcpt, "<"..addr..">")
-    end
-end
--- set the from address
-function SendMail:set_from(from)
-    local addr = validate_email(from)
-    if addr then
-        self.from = "<"..addr..">"
-        self.headers.from = from
-    end
-end
--- set the to address
-function SendMail:set_to(to)
-    if validate_email(to) then
-        self.headers.to = to
-    end
-end
--- set the cc address
-function SendMail:set_cc(cc)
-    if validate_email(cc) then
-        self.headers.cc = cc
-    end
-end
--- set the subject
-function SendMail:set_subject(subject)
-    if (type(subject) == "string") then
-        self.headers.subject = subject
-    end
-end
--- set the body
-function SendMail:set_body(body)
-    self.body = body
-end
--- send the email, and if failed return the error msg
-function SendMail:send()
-    r, e = smtp.send{
-        from = self.from,
-        rcpt = self.rcpt,
-        source = smtp.message({
-            headers = self.headers,
-            body = self.body
-        }),
-        server = conf.mail.server,
-        domain = conf.mail.domain
-    }
-    if not r then
-        return e
-    end
 end
 
 --
@@ -485,6 +421,14 @@ function FlaggedModel(pkgs, arch)
     return r
 end
 
+function MailMaintainerModel(pkg, from, message)
+    return {
+        maintainer =  format_maintainer(pkg.maintainer),
+        origin = pkg.origin,
+        from = from,
+        message = message
+    }
+end
 --
 -- Turbo request handlers
 --
@@ -618,19 +562,14 @@ function FlagRenderer:post(repo, origin, version)
         -- Check if we have a valid maintainer recipient
         if validate_email(pkg.maintainer) then
             local subject = string.format("Alpine aport %s has been flagged out of date", origin)
-            self.options.mail:set_from(conf.mail.from)
-            self.options.mail:set_rcpt(pkg.maintainer)
-            self.options.mail:set_to(pkg.maintainer)
-            self.options.mail:set_subject(subject)
-            local m = {
-                maintainer =  format_maintainer(pkg.maintainer),
-                origin = origin,
-                from = from,
-                message = message
-            }
-            body = lustache:render(tpl("mail_body.tpl"), m)
-            self.options.mail:set_body(body)
-            local result = self.options.mail:send()
+            mail:set_from(conf.mail.from)
+            mail:set_rcpt(pkg.maintainer)
+            mail:set_to(pkg.maintainer)
+            mail:set_subject(subject)
+            local model = MailMaintainerModel(pkg, from, message)
+            body = lustache:render(tpl("mail_body.tpl"), model)
+            mail:set_body(body)
+            local result = mail:send()
             if not result then
                 alert = "Succesfully notified maintainer"
                 type = "success"
@@ -662,13 +601,12 @@ end
 
 function main()
     local alert = Alert()
-    local mail = SendMail()
     turbo.web.Application({
         {"^/$", turbo.web.RedirectHandler, "/packages"},
         {"^/contents$", ContentsRenderer, {alert=alert}},
         {"^/packages$", PackagesRenderer, {alert=alert}},
         {"^/package/(.*)/(.*)/(.*)$", PackageRenderer, {alert=alert}},
-        {"^/flag/(.*)/(.*)/(.*)$", FlagRenderer, {mail=mail, alert=alert}},
+        {"^/flag/(.*)/(.*)/(.*)$", FlagRenderer, {alert=alert}},
         {"^/flagged$", FlaggedRenderer, {alert=alert}},
         {"^/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
         {"^/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
