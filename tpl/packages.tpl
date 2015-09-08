@@ -60,7 +60,7 @@
                         </td>
                         {{/flagged}}
                         <td class="url"><a href="{{{url.path}}}">{{{url.text}}}</a></td>
-                        <td class="license">{{{lic}}}</td>
+                        <td class="license">{{{license}}}</td>
                         <td class="arch">{{{arch}}}</td>
                         <td class="repo">{{{repo}}}</td>
                         <td class="maintainer">{{{maintainer}}}</td>

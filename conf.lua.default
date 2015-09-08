@@ -4,6 +4,14 @@ local conf = {}
 conf.port    = 8888
 -- template location
 conf.tpl = "./tpl"
+-- repository settings
+conf.mirror = "http://nl.alpinelinux.org/alpine"
+conf.repo = {"main", "testing"}
+conf.arch = {"x86", "x86_64", "armhf"}
+-- debug messages
+conf.debug = true
+-- update db (in minutes)
+conf.update = 15
 -- google recaptcha settings
 conf.rc = {}
 -- set sitekey to false to disable recaptcha

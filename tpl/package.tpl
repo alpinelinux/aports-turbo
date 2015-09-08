@@ -26,7 +26,7 @@
                                             </tr>
                                             <tr>
                                                 <th>Description</th>
-                                                <td>{{{pkg.desc}}}</td>
+                                                <td>{{{pkg.description}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Project</th>
@@ -34,7 +34,7 @@
                                             </tr>
                                             <tr>
                                                 <th>License</th>
-                                                <td>{{{pkg.lic}}}</td>
+                                                <td>{{{pkg.license}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Repository</th>
@@ -50,7 +50,7 @@
                                             </tr>
                                             <tr>
                                                 <th>Installed size</th>
-                                                <td>{{{pkg.install_size}}}</td>
+                                                <td>{{{pkg.installed_size}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Origin</th>

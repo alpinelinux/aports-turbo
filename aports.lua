@@ -1,22 +1,20 @@
 #!/usr/bin/env luajit
 
 -- include config file
-local conf = dofile("conf.lua")
+conf = dofile("conf.lua")
 
 -- lua turbo application
 TURBO_SSL = true
 local turbo = require "turbo"
-local sqlite3 = require('lsqlite3')
+
 local smtp = require("socket.smtp")
 -- we use lustache instead of turbo's limited mustache engine
 local lustache = require("lustache")
---
--- open databases. these will be overwritten by our aports scripts.
--- flagged is persistent and should not be monitored by turbovisor.
----
-local filelist = sqlite3.open('db/filelist.db')
-local apkindex = sqlite3.open('db/apkindex.db')
-local flagged  = sqlite3.open('db/persistent/flagged.db')
+
+local db = require("db")
+local apkindex = db.apkindex()
+local filelist = db.filelist()
+local flagged = db.flagged()
 
 --
 -- usefule lua helper functions
@@ -64,6 +62,11 @@ function tpl(tpl)
     local r = f:read("*all")
     f:close()
     return r
+end
+
+function create_db()
+    apkindex:create()
+    filelist:create()
 end
 
 -- format a date
@@ -161,7 +164,7 @@ end
 
 -- check if version exist in apkindex
 function OriginExists(repo, origin, version)
-    local origins = QueryOrigin(repo, origin)
+    local origins = apkindex:get_origin(repo, origin)
     if (type(origins) == "table") then
         for _,f in pairs (origins) do
             if f.version == version then
@@ -241,194 +244,6 @@ function CreateSelectQuery(select, from, operators)
 end
 
 --
--- SQlite section
---
-
--- get the flagged data for specific origin in repo and specified version
-function QueryFlaggedStatus(origin, repo, version)
-    local r = {}
-    local ops = {origin=origin, repo=repo, version=version}
-    local res = CreateSelectQuery("*", "flagged", ops)
-    local stmt = flagged:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return next(r) and r[1] or false
-end
-
-function QueryFlagged(ops)
-    local r = {}
-    local res = CreateSelectQuery("*", "flagged", ops)
-    res.sql = res.sql .. " ORDER BY date DESC"
-    local stmt = flagged:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- get all packages whith deps and arch
-function QueryRequiredBy(deps, arch)
-    local r = {}
-    local ops = {deps=deps, arch=arch}
-    local res = CreateSelectQuery("*", "apkindex", ops)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- get a pacakge or return false if not found
-function QueryPackage(ops)
-    local r = {}
-    --local ops = {name=name, repo=repo, arch=arch}
-    local res = CreateSelectQuery("*", "apkindex", ops)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return next(r) and r[1] or false
-end
-
--- get all packages which have certain provides
-function QueryDepends(provides, name, arch)
-    local r = {}
-    local ops = {provides=provides, name=name, arch=arch}
-    local res = CreateSelectQuery("*", "apkindex", ops)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- get the file list from database for a specific package
-function QueryContents(file, path, pkgname, arch, repo, page)
-    local r = {}
-    local args = {file=file,path=path,pkgname=pkgname,arch=arch,repo=repo}
-    local res = CreateSelectQuery("*", "filelist", args)
-    res.sql = string.format("%s LIMIT ?,%s", res.sql, conf.pager.limit)
-    table.insert(res.args, (page - 1) * conf.pager.limit)
-    local stmt = filelist:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- count entries found by our contents query
-function GetContentsCount(file, path, pkgname, arch, repo)
-    args = {file=file, path=path, pkgname=pkgname, arch=arch, repo=repo}
-    local res = CreateSelectQuery("count(*)", "filelist", args)
-    local stmt = filelist:prepare(res.sql)
-    stmt:bind_names(res.args)
-    stmt:step()
-    local r = stmt:get_value(0)
-    stmt:finalize()
-    return r
-end
-
--- get a list of packages
-function QueryPackages(name, repo, arch, page)
-    local r = {}
-    local ops = {name=name, repo=repo, arch=arch}
-    local res = CreateSelectQuery("*", "apkindex", ops)
-    res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
-    table.insert(res.args, (page - 1) * conf.pager.limit)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- get a list of packages
-function QueryPackagesFlagged(ops, page)
-    local r = {}
-    local res = CreateSelectQuery("*", "apkindex", ops)
-    res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
-    table.insert(res.args, (page - 1) * conf.pager.limit)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- count query to help our pager
-function GetPackagesCount(name, repo, arch)
-    local ops = {name=name, repo=repo, arch=arch}
-    local res = CreateSelectQuery("count(*)", "apkindex", ops)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    stmt:step()
-    local r = stmt:get_value(0)
-    stmt:finalize()
-    return r
-end
-
--- add an origin entry to the flagged db
-function FlagOrigin(repo, origin, version, message)
-    local sql = [[ insert into flagged(repo, origin, version, date, message)
-        values(?, ?, ?, strftime('%s', 'now'), ?) ]]
-    local stmt = flagged:prepare(sql)
-    stmt:bind_values(repo, origin, version, message)
-    local r = stmt:step()
-    stmt:finalize()
-    return r
-end
-
--- get all packages with same origin in the same repo
--- with (optional) arch
-function QueryOrigin(repo, origin, arch)
-    local r = {}
-    local ops = {repo=repo, origin=origin, arch=arch}
-    local res = CreateSelectQuery("*", "apkindex", ops)
-    local stmt = apkindex:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
--- get unique archs
-function QueryArchs()
-    local r = {}
-    for row in apkindex:nrows("select distinct arch from apkindex") do
-        r[#r+1] = row
-    end
-    return r
-end
-
--- get unique repos
-function QueryRepos()
-    local r = {}
-    for row in apkindex:nrows("select distinct repo from apkindex") do
-        r[#r+1] = row
-    end
-    return r
-end
-
---
 -- Model section
 --
 
@@ -463,7 +278,7 @@ end
 -- get pkgname with same origin
 function SubPackagesModel(pkg)
     local r = {}
-    local origins = QueryOrigin(pkg.repo, pkg.origin, pkg.arch)
+    local origins = apkindex:get_origin(pkg.repo, pkg.origin, pkg.arch)
     for k,v in pairs (origins) do
         if v.name ~= pkg.name then
             r[#r+1] = {
@@ -477,17 +292,17 @@ end
 
 function DependsModel(pkg)
     local r,d,sd,rd = {},{},{},{}
-    for k,v in pairs (pkg.deps:split(" ")) do
+    for k,v in pairs (pkg.depends:split(" ")) do
         -- resolve so deps
         if v:begins('so:') then
-            sdpkg = QueryDepends("%"..v.."%", "%", pkg.arch)
+            sdpkg = apkindex:get_depends("%"..v.."%", "%", pkg.arch)
             if next(sdpkg) then
                 sd = FilterDeps(sdpkg, pkg.repo)
                 r[sd.name] = sd
             end
         else
             local name = v:gsub('=.*', '')
-            dpkg = QueryDepends("%", name, pkg.arch)
+            dpkg = apkindex:get_depends("%", name, pkg.arch)
             if next(dpkg) then
                 d = FilterDeps(dpkg, pkg.repo)
                 r[d.name] = d
@@ -510,15 +325,15 @@ function RequiredByModel(pkg)
         -- remove version data
         -- we do not support verioned deps
         d = d:gsub('=.*', '')
-        pkgs = QueryRequiredBy("%"..d.."%", pkg.arch)
+        pkgs = apkindex:get_required_by("%"..d.."%", pkg.arch)
         for k,v in pairs(pkgs) do
             r[v.name..v.repo] = v
         end
     end
     -- lookup package that depends on pkgname
-    pkgs = QueryRequiredBy("%"..pkg.name.."%", pkg.arch)
+    pkgs = apkindex:get_required_by("%"..pkg.name.."%", pkg.arch)
     for k,v in pairs(pkgs) do
-        if turbo.util.is_in(pkg.name, v.deps:split(" ")) then
+        if turbo.util.is_in(pkg.name, v.depends:split(" ")) then
             r[v.name..v.repo] = v
         end
     end
@@ -533,7 +348,7 @@ function RequiredByModel(pkg)
 end
 
 function PackageModel(pkg)
-    local flag = QueryFlaggedStatus(pkg.origin, pkg.repo, pkg.version)
+    local flag = flagged:get_status(pkg.origin, pkg.repo, pkg.version)
     if flag then
         pkg.version = {
             class="text-danger",
@@ -552,13 +367,13 @@ function PackageModel(pkg)
     return {
         name = pkg.name and pkg.name or "None",
         version = pkg.version and pkg.version or "None",
-        desc = pkg.desc and pkg.desc or "None",
+        description = pkg.description and pkg.description or "None",
         url = pkg.url and pkg.url or "None",
-        lic = pkg.lic and pkg.lic or "None",
+        license = pkg.license and pkg.license or "None",
         repo = pkg.repo and pkg.repo or "None",
         arch = pkg.arch and pkg.arch or "None",
         size = pkg.size and human_bytes(pkg.size) or "None",
-        install_size = pkg.install_size and human_bytes(pkg.install_size) or "None",
+        installed_size = pkg.installed_size and human_bytes(pkg.installed_size) or "None",
         origin = pkg.origin and {
             path=string.format("/package/%s/%s/%s", pkg.repo, pkg.arch, pkg.origin),
             text=pkg.origin
@@ -583,7 +398,7 @@ function PackagesModel(pkgs)
         r[k].name = {
             path=string.format("/package/%s/%s/%s", v.repo, v.arch, v.name),
             text=v.name,
-            title=v.desc
+            title=v.description
         }
         r[k].version = {
             path=string.format("/flag/%s/%s/%s", v.repo, v.origin, v.version),
@@ -595,12 +410,12 @@ function PackagesModel(pkgs)
             text="URL",
             title=v.url
         }
-        r[k].lic = v.lic
+        r[k].license = v.license
         r[k].arch = v.arch
         r[k].repo = v.repo
         r[k].maintainer = format_maintainer(v.maintainer)
         r[k].build_time = format_date(v.build_time)
-        local fs = QueryFlaggedStatus(v.origin, v.repo, v.version)
+        local fs = flagged:get_status(v.origin, v.repo, v.version)
         if (fs) then r[k].flagged = {date=format_date(fs.date)} end
     end
     return r
@@ -623,7 +438,7 @@ end
 
 function FormArchModel(selected)
     local r = {}
-    local archs = QueryArchs()
+    local archs = apkindex:get_archs()
     table.insert(archs, {arch="all"})
     for k,v in pairs(archs) do
         r[k] = {text=v.arch}
@@ -636,7 +451,7 @@ end
 
 function FormRepoModel(selected)
     local r = {}
-    local repos = QueryRepos()
+    local repos = apkindex:get_repos()
     table.insert(repos, {repo="all"})
     for k,v in pairs(repos) do
         r[k] = {text=v.repo}
@@ -713,8 +528,8 @@ function ContentsRenderer:get()
     m.alert = self.options.alert:get_msg()
     m.form = ContentsFormModel(a.filename, a.path, a.pkgname, a.repo, a.arch)
     if not (a.filename == "" and a.path == ""  and a.pkgname == "") then
-        local contents = QueryContents(a.filename, a.path, a.pkgname, a.arch, a.repo, a.page)
-        local count = GetContentsCount(a.filename, a.path, a.pkgname, a.arch, a.repo)
+        local contents = filelist:get_files(a.filename, a.path, a.pkgname, a.arch, a.repo, a.page)
+        local count = filelist:count_files(a.filename, a.path, a.pkgname, a.arch, a.repo)
         m.contents = ContentsModel(contents)
         m.pager = PagerModel(a, count)
     end
@@ -734,8 +549,8 @@ function PackagesRenderer:get()
         repo = self:get_argument("repo", "all", true),
         page = tonumber(self:get_argument("page", 1, true)),
     }
-    local pkgs = QueryPackages(a.name, a.repo, a.arch, a.page)
-    local num = GetPackagesCount(a.name, a.repo, a.arch)
+    local pkgs = apkindex:get_packages(a.name, a.repo, a.arch, a.page)
+    local num = apkindex:count_packages(a.name, a.repo, a.arch)
     m.nav = {package="active", content=""}
     m.alert = self.options.alert:get_msg()
     m.form = PackagesFormModel(a.name, a.repo, a.arch)
@@ -752,7 +567,7 @@ local PackageRenderer = class("PackageRenderer", turbo.web.RequestHandler)
 function PackageRenderer:get(repo, arch, name)
     local m = {}
     local ops = {repo=repo, arch=arch, name=name}
-    local pkg = QueryPackage(ops)
+    local pkg = apkindex:get_package(ops)
     if not pkg then
         error(turbo.web.HTTPError(404, "404 Page not found."))
     end
@@ -776,12 +591,12 @@ local FlagRenderer = class("FlagRenderer", turbo.web.RequestHandler)
 function FlagRenderer:get(repo, origin, version)
     local args = {"flag",repo,origin,version}
     local ops = {origin=origin, repo=repo}
-    local pkg = QueryPackage(ops)
+    local pkg = apkindex:get_package(ops)
     --trow an http error if this package doesnt exists
     if not OriginExists(repo, origin, version) then
         error(turbo.web.HTTPError(404, "404 Page not found."))
     -- display alert when origin is already flagged
-    elseif QueryFlaggedStatus(origin, repo, version) then
+    elseif flagged:get_status(origin, repo, version) then
         alert = "This origin has already been flagged"
         self.options.alert:set_msg(alert, "danger")
     end
@@ -805,7 +620,7 @@ function FlagRenderer:post(repo, origin, version)
     if not OriginExists(repo, origin, version) then
         error(turbo.web.HTTPError(404, "404 Page not found."))
     -- display alert when origin is already flagged
-    elseif QueryFlaggedStatus(origin, repo, version) then
+    elseif flagged:get_status(origin, repo, version) then
         alert = "This origin has already been flagged"
     -- check for valid email address
     elseif not validate_email(from) then
@@ -814,16 +629,17 @@ function FlagRenderer:post(repo, origin, version)
     elseif conf.rc.sitekey and not RecaptchaVerify(responce) then
         alert = "Failed to pass recaptcha. Please try again."
     -- flag origin, if failed we display an alert
-    elseif not FlagOrigin(repo, origin, version, message) then
+    elseif not flagged:flag_origin(repo, origin, version, message) then
         alert = [[ Failed to flag origin package: origin ]]
     -- all is well (we presume)
     else
         args = {"packages"}
         type = "success"
-        local pkg = QueryPackage(origin, repo)
+        local ops = {origin=origin, repo=repo}
+        local pkg = apkindex:get_package(ops)
         -- Check if we have a valid maintainer recipient
         if validate_email(pkg.maintainer) then
-            local subject = "Alpine aport "..origin.." has been flagged out of date"
+            local subject = string.format("Alpine aport %s has been flagged out of date", origin)
             self.options.mail:set_from(conf.mail.from)
             self.options.mail:set_rcpt(pkg.maintainer)
             self.options.mail:set_to(pkg.maintainer)
@@ -857,16 +673,14 @@ function FlaggedRenderer:get()
     local arch = self:get_argument("arch", "x86_64", true)
     local repo = self:get_argument("repo", "all", true)
     local page = tonumber(self:get_argument("page", 1, true))
-    --local ops = {}
     m.form = PackagesFormModel(name, repo, arch)
     local ops = {origin=name,repo=repo}
-    local pkgs = QueryFlagged(ops)
+    local pkgs = flagged:get_flagged(ops)
     m.pkgs = FlaggedModel(pkgs, arch)
     m.header = lustache:render(tpl("header.tpl"), m)
     m.footer = lustache:render(tpl("footer.tpl"), m)
     self:write(lustache:render(tpl("flagged.tpl"), m))
 end
-
 
 function main()
     local alert = Alert()
@@ -881,7 +695,9 @@ function main()
         {"^/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
         {"^/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
     }):listen(conf.port)
-    turbo.ioloop.instance():start()
+    local loop = turbo.ioloop.instance()
+    loop:set_interval(60000 * conf.update, create_db)
+    loop:start()
 end
 
 main()
