@@ -33,6 +33,12 @@ function M.db:msg(msg)
     if conf.debug then print(msg) end
 end
 
+function M.db.sha1sum(str)
+    local digest = turbo.hash.SHA1(str)
+    digest:finalize()
+    return digest:hex()
+end
+
 M.apkindex = class("apkindex", M.db)
 
 function M.apkindex:initialize()
@@ -119,9 +125,7 @@ function M.apkindex:is_new(repo, arch)
     local f = io.popen(cmdfmt:format(index))
     local file = f:read("*all")
     f:close()
-    local digest = turbo.hash.SHA1(file)
-    digest:finalize()
-    local sha1sum = digest:hex()
+    local sha1sum = self:sha1sum(file)
     if not self.csum[repo] then 
         self.csum[repo] = {}
     else 
@@ -349,9 +353,7 @@ end
 
 -- should be shared
 function M.filelist:is_new(repo, arch)
-    local digest = turbo.hash.SHA1(self.json)
-    digest:finalize()
-    local sha1sum = digest:hex()
+    local sha1sum = self:sha1sum(self.json)
     if not self.csum[repo] then 
         self.csum[repo] = {}
     else 
