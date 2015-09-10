@@ -57,6 +57,10 @@ function format_maintainer(maintainer)
             string.gsub(maintainer, ' <.*>', '') or "None"
 end
 
+function is_set(str)
+   if str and str ~= "" then return str end
+end
+
 -- read the tpl file into a string and return it
 function tpl(tpl)
     local f = io.open(conf.tpl.."/"..tpl, "rb")
@@ -279,22 +283,22 @@ function PackageModel(pkg)
         }
     end
     return {
-        name = pkg.name and pkg.name or "None",
-        version = pkg.version and pkg.version or "None",
-        description = pkg.description and pkg.description or "None",
-        url = pkg.url and pkg.url or "None",
-        license = pkg.license and pkg.license or "None",
-        repo = pkg.repo and pkg.repo or "None",
-        arch = pkg.arch and pkg.arch or "None",
+        name = is_set(pkg.name) or "None",
+        version = is_set(pkg.version) or "None",
+        description = is_set(pkg.description) or "None",
+        url = is_set(pkg.url) or "None",
+        license = is_set(pkg.license) or "None",
+        repo = is_set(pkg.repo) or "None",
+        arch = is_set(pkg.arch) or "None",
         size = pkg.size and human_bytes(pkg.size) or "None",
-        installed_size = pkg.installed_size and human_bytes(pkg.installed_size) or "None",
-        origin = pkg.origin and {
+        installed_size = is_set(pkg.installed_size) and human_bytes(pkg.installed_size) or "None",
+        origin = is_set(pkg.origin) and {
             path=string.format("/package/%s/%s/%s", pkg.repo, pkg.arch, pkg.origin),
             text=pkg.origin
         } or {path="#", text="None"},
-        maintainer = pkg.maintainer and pkg.maintainer or "None",
-        build_time = pkg.build_time and format_date(pkg.build_time) or "None",
-        commit = pkg.commit and {
+        maintainer = is_set(pkg.maintainer) or "None",
+        build_time = is_set(pkg.build_time) and format_date(pkg.build_time) or "None",
+        commit = is_set(pkg.commit) and {
             path=string.format("http://git.alpinelinux.org/cgit/aports/commit/?id=%s", pkg.commit),
             text=pkg.commit
         } or {path="#", text="None"},
