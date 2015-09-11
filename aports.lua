@@ -183,7 +183,7 @@ function PagerModel(args, total)
                         v=p
                     end
                 end
-                r[#r+1]=string.format("%s=%s",g,v)
+                r[#r+1]=string.format("%s=%s", urlencode(g), urlencode(v))
             end
             path=table.concat(r, '&amp;')
             class = (args.page == p) and "active" or ""
