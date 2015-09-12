@@ -182,9 +182,10 @@ function M.apkindex:has_changes()
 end
 
 -- get a list of packages
-function M.apkindex:get_packages(name, repo, arch, page)
+function M.apkindex:get_packages(name, repo, arch, maintainer, page)
     local r = {}
-    local ops = {name=name, repo=repo, arch=arch}
+    maintainer = (maintainer == "all") and "all" or string.format("%s%s%s","%",maintainer,"%")
+    local ops = {name=name, repo=repo, arch=arch, maintainer=maintainer}
     local res = self:select_query("*", "apkindex", ops)
     res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
     table.insert(res.args, (page - 1) * conf.pager.limit)
@@ -239,8 +240,8 @@ function M.apkindex:get_depends(provides, name, arch)
 end
 
 -- count query to help our pager
-function M.apkindex:count_packages(name, repo, arch)
-    local ops = {name=name, repo=repo, arch=arch}
+function M.apkindex:count_packages(name, repo, arch, maintainer)
+    local ops = {name=name, repo=repo, arch=arch, maintainer=maintainer}
     local res = self:select_query("count(*)", "apkindex", ops)
     local stmt = self.db:prepare(res.sql)
     stmt:bind_names(res.args)
@@ -265,19 +266,10 @@ function M.apkindex:get_origin(repo, origin, arch)
     return r
 end
 
--- get unique archs
-function M.apkindex:get_archs()
+function M.apkindex:get_distinct(column)
     local r = {}
-    for row in self.db:nrows("select distinct arch from apkindex") do
-        r[#r+1] = row
-    end
-    return r
-end
-
--- get unique repos
-function M.apkindex:get_repos()
-    local r = {}
-    for row in self.db:nrows("select distinct repo from apkindex") do
+    local sql = string.format([[ select distinct %s from apkindex ]], column)
+    for row in self.db:nrows(sql) do
         r[#r+1] = row
     end
     return r

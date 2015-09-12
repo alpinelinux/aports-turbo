@@ -17,6 +17,7 @@ local filelist = db.filelist()
 local flagged = db.flagged()
 
 local mail = require("mail")
+
 --
 -- usefule lua helper functions
 --
@@ -51,10 +52,23 @@ function validate_email(addr)
     return addr:match("[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?")
 end
 
--- Return a valid email address if found, or none when not found
+function parse_rfc822(addr)
+    local r = {}
+    if is_set(addr) then
+        local name, email = turbo.escape.trim(addr):match("(.*)(<.*>)")
+        if is_set(email) then r.email = validate_email(email) end
+        if is_set(name) then r.name = turbo.escape.trim(name) end
+    end
+    if r.email or r.name then return r end
+end
+
 function format_maintainer(maintainer)
-    return validate_email(maintainer) and
-            string.gsub(maintainer, ' <.*>', '') or "None"
+    local addr = parse_rfc822(maintainer)
+    if addr and addr.name then
+        return addr.name
+    else
+        return "None"
+    end
 end
 
 function is_set(str)
@@ -356,7 +370,7 @@ end
 
 function FormArchModel(selected)
     local r = {}
-    local archs = apkindex:get_archs()
+    local archs = apkindex:get_distinct("arch")
     table.insert(archs, {arch="all"})
     for k,v in pairs(archs) do
         r[k] = {text=v.arch}
@@ -369,7 +383,7 @@ end
 
 function FormRepoModel(selected)
     local r = {}
-    local repos = apkindex:get_repos()
+    local repos = apkindex:get_distinct("repo")
     table.insert(repos, {repo="all"})
     for k,v in pairs(repos) do
         r[k] = {text=v.repo}
@@ -380,10 +394,44 @@ function FormRepoModel(selected)
     return r
 end
 
-function PackagesFormModel(name, repo, arch)
+function FormMaintainerModel(selected)
+    local r = {}
+    -- create a list of maintainers by name and filter dups
+    local maintainers = apkindex:get_distinct("maintainer")
+    for k,v in ipairs(maintainers) do
+        local m = parse_rfc822(v.maintainer)
+        if m and is_set(m.name) then
+            r[m.name] = m.name
+        end
+    end
+    -- sort the table
+    local s = {}
+    for k,v in pairs(r) do
+        table.insert(s,v)
+    end
+    table.sort(s)
+    -- create the model
+    local t = {{value="all", text="all"}}
+    if selected == "all" then t[#t].selected = "selected" end
+    for k,v in ipairs(s) do
+        t[#t+1] = {value=v,text=limit_string(v, 25)}
+        if v == selected then t[#t].selected = "selected" end
+    end
+    return t
+end
+
+function limit_string(str, len)
+    if string.len(str) > len then
+        return string.sub(str,1,len).."..."
+    end
+    return str
+end
+
+function PackagesFormModel(name, repo, arch, maintainer)
     local r = {}
     r.repo = FormRepoModel(repo)
     r.arch = FormArchModel(arch)
+    r.maintainer = FormMaintainerModel(maintainer)
     r.name = name
     return r
 end
@@ -473,13 +521,14 @@ function PackagesRenderer:get()
         name = self:get_argument("name","", true),
         arch = self:get_argument("arch", "x86_64", true),
         repo = self:get_argument("repo", "all", true),
+        maintainer = self:get_argument("maintainer", "all", true),
         page = tonumber(self:get_argument("page", 1, true)),
     }
-    local pkgs = apkindex:get_packages(a.name, a.repo, a.arch, a.page)
-    local num = apkindex:count_packages(a.name, a.repo, a.arch)
+    local pkgs = apkindex:get_packages(a.name, a.repo, a.arch, a.maintainer, a.page)
+    local num = apkindex:count_packages(a.name, a.repo, a.arch, a.maintainer)
     m.nav = {package="active", content=""}
     m.alert = self.options.alert:get_msg()
-    m.form = PackagesFormModel(a.name, a.repo, a.arch)
+    m.form = PackagesFormModel(a.name, a.repo, a.arch, a.maintainer)
     m.pkgs = PackagesModel(pkgs)
     m.pager = PagerModel(a, num)
     m.header = lustache:render(tpl("header.tpl"), m)

@@ -1,5 +1,10 @@
 {{{header}}}
-    <script>$(document).ready(function(){$('[data-toggle="tooltip"]').tooltip({container: 'html'});});</script>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip({container: 'html'});
+            $('.chosen-select').chosen();
+        });
+    </script>
     <div id="main">
         <div class="panel panel-default">
             <div class="panel-heading">Search for packages</div>
@@ -11,7 +16,7 @@
                     </div>
                     <div class="form-group">
                         <label for="repo">Repository</label>
-                        <select name="repo" class="form-control" id="repo">
+                        <select name="repo" class="form-control chosen-select" id="repo">
                         {{#form.repo}}
                             <option {{{selected}}} >{{{text}}}</option>
                         {{/form.repo}}
@@ -19,10 +24,18 @@
                     </div>
                     <div class="form-group">
                         <label for="arch">Architecture</label>
-                        <select name="arch" class="form-control" id="arch">
+                        <select name="arch" class="form-control chosen-select" id="arch">
                         {{#form.arch}}
                             <option {{{selected}}} >{{{text}}}</option>
                         {{/form.arch}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="maintainer">Maintainer</label>
+                        <select name="maintainer" class="form-control chosen-select" id="maintainer">
+                        {{#form.maintainer}}
+                            <option {{{selected}}} value="{{{value}}}">{{{text}}}</option>
+                        {{/form.maintainer}}
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary">Search</button>
