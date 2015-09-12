@@ -310,7 +310,7 @@ function PackageModel(pkg)
             path=string.format("/package/%s/%s/%s", pkg.repo, pkg.arch, pkg.origin),
             text=pkg.origin
         } or {path="#", text="None"},
-        maintainer = is_set(pkg.maintainer) or "None",
+        maintainer = is_set(format_maintainer(pkg.maintainer)) or "None",
         build_time = is_set(pkg.build_time) and format_date(pkg.build_time) or "None",
         commit = is_set(pkg.commit) and {
             path=string.format("http://git.alpinelinux.org/cgit/aports/commit/?id=%s", pkg.commit),
