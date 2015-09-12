@@ -241,6 +241,9 @@ end
 
 -- count query to help our pager
 function M.apkindex:count_packages(name, repo, arch, maintainer)
+    if maintainer ~= "all" then
+        maintainer = string.format("%s%s%s","%",maintainer,"%")
+    end
     local ops = {name=name, repo=repo, arch=arch, maintainer=maintainer}
     local res = self:select_query("count(*)", "apkindex", ops)
     local stmt = self.db:prepare(res.sql)
