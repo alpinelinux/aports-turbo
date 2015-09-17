@@ -669,4 +669,5 @@ function main()
     loop:start()
 end
 
+create_db()
 main()
