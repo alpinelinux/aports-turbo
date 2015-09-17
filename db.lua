@@ -103,7 +103,6 @@ end
 function M.apkindex:get_index(repo, arch)
     local r = {}
     local result = {}
-    self.packages = {}
     local cmdfmt = "curl -s '%s' | tar -O -zx APKINDEX"
     local index = string.format("%s/edge/%s/%s/APKINDEX.tar.gz", conf.mirror, repo, arch)
     local f = io.popen(cmdfmt:format(index))
@@ -112,11 +111,12 @@ function M.apkindex:get_index(repo, arch)
             local k,v = line:match("^(%a):(.*)")
             r[k] = v
         else
-            table.insert(self.packages, r)
+            table.insert(result, r)
             r = {}
         end
     end
     f:close()
+    return result
 end
 
 function M.apkindex:is_new(repo, arch)
@@ -146,7 +146,8 @@ function M.apkindex:import(repo, arch)
         :build_time, :commit, :repo) ]]
     local stmt = self.db:prepare(sql)
     self.db:exec([[ begin transaction ]])
-    for k,v in pairs(self.packages) do
+    local packages = self:get_index(repo, arch)
+    for k,v in pairs(packages) do
         local s = {}
         for pk,pv in pairs(self:format()) do
             s[pv] = v[pk] and v[pk] or ""
@@ -163,7 +164,6 @@ end
 function M.apkindex:process()
     for _,repo in ipairs(conf.repo) do
         for _,arch in ipairs(conf.arch) do
-            self:get_index(repo, arch)
             self:import(repo, arch)
         end
     end
@@ -318,13 +318,16 @@ function M.filelist:get_json(repo, arch)
     local url = string.format("%s/filelist/%s-%s.json.gz", conf.mirror, repo, arch)
     local curlfmt = "curl -s '%s' | gunzip"
     local f = io.popen(curlfmt:format(url))
-    self.json = f:read("*all")
+    local json = f:read("*all")
+    f:close()
+    return json
 end
 
 function M.filelist:import(repo, arch)
     local sql = [[ insert into filelist_tmp('file', 'path', 'pkgname', 'repo', 'arch') values (?,?,?,?,?) ]]
     local stmt = self.db:prepare(sql)
-    local pkgs = cjson.decode(self.json)
+    local json = self:get_json(repo, arch)
+    local pkgs = cjson.decode(json)
     self.db:exec([[ begin transaction ]])
     for pkgname,files in pairs(pkgs) do
         for _,file in ipairs(files) do
@@ -340,7 +343,6 @@ end
 function M.filelist:process()
     for _,repo in ipairs(conf.repo) do
         for _,arch in ipairs(conf.arch) do
-            self:get_json(repo, arch)
             self:import(repo, arch)
         end
     end
@@ -348,7 +350,8 @@ end
 
 -- should be shared
 function M.filelist:is_new(repo, arch)
-    local sha1sum = self:sha1sum(self.json)
+    local json = self:get_json(repo, arch)
+    local sha1sum = self:sha1sum(json)
     if not self.csum[repo] then 
         self.csum[repo] = {}
     else 
