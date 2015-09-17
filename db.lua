@@ -33,7 +33,7 @@ function M.db:msg(msg)
     if conf.debug then print(msg) end
 end
 
-function M.db.sha1sum(str)
+function M.db:sha1sum(str)
     local digest = turbo.hash.SHA1(str)
     digest:finalize()
     return digest:hex()
