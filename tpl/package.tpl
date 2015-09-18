@@ -69,6 +69,10 @@
                                                 <td><a href="{{{pkg.commit.path}}}">{{{pkg.commit.text}}}</a></td>
                                             </tr>
                                             <tr>
+                                                <th>Build log</th>
+                                                <td><a href="http://build.alpinelinux.org/buildlogs/build-edge-{{{pkg.arch}}}/{{{pkg.repo}}}/{{{pkg.origin.text}}}/{{{pkg.origin.text}}}-{{{pkg.version.text}}}.log">Build log</a></td>
+                                            </tr>
+                                            <tr>
                                                 <th>Contents</th>
                                                 <td><a href="{{{pkg.contents.path}}}">{{{pkg.contents.text}}}</a></td>
                                             </tr>
