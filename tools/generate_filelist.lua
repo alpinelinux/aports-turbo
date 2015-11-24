@@ -75,7 +75,7 @@ function index_changed(repo, arch)
     local index = string.format("%s/%s/%s/APKINDEX.tar.gz", src, repo, arch)
     local index_attr = lfs.attributes(index)
     local json_attr = lfs.attributes(json)
-    if (index_attr.modification > json_attr.modification) then
+    if (json_attr == nil) or (index_attr.modification > json_attr.modification) then
         return true
     end
 end
