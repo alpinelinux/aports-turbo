@@ -40,6 +40,9 @@ function create_json(repo, arch)
                     local path, file
                     if line:match("/") then
                         path, file = line:match("(.*/)(.*)")
+                        if path:sub(-1) == "/" then
+                            path = (path:sub(1, -2))
+                        end
                     else
                         path = ""
                         file = line
