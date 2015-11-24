@@ -37,8 +37,13 @@ function create_json(repo, arch)
             local f = io.open(dst.."/"..lst)
             for line in f:lines() do
                 if not (line:match("^%.") or line:match("/$")) then
-                    local path, file = line:match("(.*/)(.*)")
-                    if not path then path="" end
+                    local path, file
+                    if line:match("/") then
+                        path, file = line:match("(.*/)(.*)")
+                    else
+                        path = ""
+                        file = line
+                    end
                     table.insert(r, {file, path})
                 end
             end
