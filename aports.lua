@@ -615,6 +615,7 @@ function FlagRenderer:post(repo, origin, version)
         -- Check if we have a valid maintainer recipient
         if validate_email(pkg.maintainer) then
             local subject = string.format("Alpine aport %s has been flagged out of date", origin)
+            mail:initialize()
             mail:set_from(conf.mail.from)
             mail:set_rcpt(pkg.maintainer)
             mail:set_to(pkg.maintainer)
