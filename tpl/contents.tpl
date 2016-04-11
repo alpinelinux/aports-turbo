@@ -6,21 +6,21 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <label for="filename">File</label>
-                        <input type="text" class="form-control" id="filename" name="filename" value="{{{form.filename}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="filename" name="filename" value="{{form.filename}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="path">Path</label>
-                        <input type="text" class="form-control" id="path" name="path" value="{{{form.path}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="path" name="path" value="{{form.path}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="package">Package</label>
-                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{{form.name}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="pkgname" name="pkgname" value="{{form.name}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="repo">Repo</label>
                         <select name="repo" class="form-control" id="repo">
                         {{#form.repo}}
-                            <option {{{selected}}} >{{{text}}}</option>
+                            <option {{{selected}}} >{{text}}</option>
                         {{/form.repo}}
                         </select>
                     </div>
@@ -28,7 +28,7 @@
                         <label for="arch">Arch</label>
                         <select name="arch" class="form-control" id="arch">
                         {{#form.arch}}
-                            <option {{{selected}}} >{{{text}}}</option>
+                            <option {{{selected}}} >{{text}}</option>
                         {{/form.arch}}
                         </select>
                     </div>
@@ -45,10 +45,10 @@
                     </tr>
                     {{#contents}}
                     <tr>
-                        <td>{{{file}}}</td>
-                        <td><a href="{{{pkgname.path}}}">{{{pkgname.text}}}</a></td>
-                        <td>{{{repo}}}</td>
-                        <td>{{{arch}}}</td>
+                        <td>{{file}}</td>
+                        <td><a href="{{pkgname.path}}">{{pkgname.text}}</a></td>
+                        <td>{{repo}}</td>
+                        <td>{{arch}}</td>
                     </tr>
                     {{/contents}}
                     {{^contents}}

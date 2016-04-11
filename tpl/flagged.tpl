@@ -7,13 +7,13 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <label for="package">Origin</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{{form.name}}}" placeholder="use % as wildcard">
+                        <input type="text" class="form-control" id="name" name="name" value="{{form.name}}" placeholder="use % as wildcard">
                     </div>
                     <div class="form-group">
                         <label for="repo">Repository</label>
                         <select name="repo" class="form-control" id="repo">
                         {{#form.repo}}
-                            <option {{{selected}}} >{{{text}}}</option>
+                            <option {{{selected}}} >{{text}}</option>
                         {{/form.repo}}
                         </select>
                     </div>
@@ -32,11 +32,11 @@
                     {{#pkgs}}
                     <tr>
                         <td class="origin">
-                            <a data-toggle="tooltip" title="{{{origin.title}}}" href="{{{origin.path}}}">{{{origin.text}}}</a>
+                            <a data-toggle="tooltip" title="{{origin.title}}" href="{{origin.path}}">{{origin.text}}</a>
                         </td>
-                        <td class="repo">{{{repo}}}</td>
-                        <td class="version text-danger"><strong>{{{version}}}</strong></td>
-                        <td class="date">{{{date}}}</td>
+                        <td class="repo">{{repo}}</td>
+                        <td class="version text-danger"><strong>{{version}}</strong></td>
+                        <td class="date">{{date}}</td>
                         <td class="message"><span class="glyphicon glyphicon-envelope" aria-hidden="true" title="{{message}}" data-toggle="tooltip"></span></td>
                     </tr>
                     {{/pkgs}}
