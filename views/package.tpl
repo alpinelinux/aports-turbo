@@ -14,59 +14,63 @@
                                         <table class="table table-striped table-bordered table-condensed">
                                             <tr>
                                                 <th>Package</th>
-                                                <td>{{pkg.name}}</td>
+                                                <td>{{{pkg.name}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Version</th>
                                                 <td>
                                                     <strong>
-                                                        <a data-toggle="tooltip" title="{{pkg.version.title}}" class="{{pkg.version.class}}" href="{{pkg.version.path}}">{{pkg.version.text}}</a>
+                                                        <a data-toggle="tooltip" title="{{{pkg.version.title}}}" class="{{{pkg.version.class}}}" href="{{{pkg.version.path}}}">{{{pkg.version.text}}}</a>
                                                     <strong>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <th>Description</th>
-                                                <td>{{pkg.description}}</td>
+                                                <td>{{{pkg.description}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Project</th>
-                                                <td><a href="{{pkg.url}}">{{pkg.url}}</a></td>
+                                                <td><a href="{{{pkg.url}}}">{{{pkg.url}}}</a></td>
                                             </tr>
                                             <tr>
                                                 <th>License</th>
-                                                <td>{{pkg.license}}</td>
+                                                <td>{{{pkg.license}}}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Branch</th>
+                                                <td>{{{pkg.branch}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Repository</th>
-                                                <td>{{pkg.repo}}</td>
+                                                <td>{{{pkg.repo}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Architecture</th>
-                                                <td>{{pkg.arch}}</td>
+                                                <td>{{{pkg.arch}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Size</th>
-                                                <td>{{pkg.size}}</td>
+                                                <td>{{{pkg.size}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Installed size</th>
-                                                <td>{{pkg.installed_size}}</td>
+                                                <td>{{{pkg.installed_size}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Origin</th>
-                                                <td><a href="{{pkg.origin.path}}">{{pkg.origin.text}}</a></td>
+                                                <td><a href="{{{pkg.origin.path}}}">{{{pkg.origin.text}}}</a></td>
                                             </tr>
                                             <tr>
                                                 <th>Maintainer</th>
-                                                <td>{{pkg.maintainer}}</td>
+                                                <td>{{{pkg.maintainer}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Build time</th>
-                                                <td>{{pkg.build_time}}</td>
+                                                <td>{{{pkg.build_time}}}</td>
                                             </tr>
                                             <tr>
                                                 <th>Commit</th>
-                                                <td><a href="{{pkg.commit.path}}">{{pkg.commit.text}}</a></td>
+                                                <td><a href="{{{pkg.commit.path}}}">{{{pkg.commit.text}}}</a></td>
                                             </tr>
                                             <tr>
                                                 <th>Build log</th>
@@ -74,11 +78,17 @@
                                             </tr>
                                             <tr>
                                                 <th>Contents</th>
-                                                <td><a href="{{pkg.contents.path}}">{{pkg.contents.text}}</a></td>
+                                                <td><a href="{{{pkg.contents.path}}}">{{{pkg.contents.text}}}</a></td>
                                             </tr>
                                         </table>
                                     </div>
                                 </div>
+                            <div class="panel-footer">
+                                <a href="{{{pkg.version.path}}}" role="button" class="btn btn-danger pull-right btn-sm" title="{{{pkg.version.title}}}" data-toggle="tooltip">
+                                    <i class="glyphicon glyphicon-flag"></i> Flag
+                                </a>
+                                <div class="clearfix"></div>
+                            </div>
                             </div>
                         </div>
                         <div class="col-md-3 col-md-offset-1">
@@ -89,7 +99,7 @@
                                 </div>
                                 <div id="collapseDeps" class="panel-collapse collapse">
                                     <ul class="list-group">
-                                    {{#deps}}<li class="list-group-item"><a href="{{path}}">{{text}}</a></li>{{/deps}}
+                                    {{#deps}}<li class="list-group-item"><a href="{{{path}}}">{{{text}}}</a></li>{{/deps}}
                                     {{^deps}}<li class="list-group-item">None</li>{{/deps}}
                                     </ul>
                                 </div>
@@ -101,7 +111,7 @@
                                 </div>
                                 <div id="collapseReqBy" class="panel-collapse collapse">
                                     <ul class="list-group">
-                                    {{#reqbys}}<li class="list-group-item"><a href="{{path}}">{{text}}</a></li>{{/reqbys}}
+                                    {{#reqbys}}<li class="list-group-item"><a href="{{{path}}}">{{{text}}}</a></li>{{/reqbys}}
                                     {{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
                                     </ul>
                                 </div>
@@ -113,7 +123,7 @@
                                 </div>
                                 <div id="collapseSubPkg" class="panel-collapse collapse">
                                     <ul class="list-group">
-                                    {{#subpkgs}}<li class="list-group-item"><a href="{{path}}">{{text}}</a></li>{{/subpkgs}}
+                                    {{#subpkgs}}<li class="list-group-item"><a href="{{{path}}}">{{{text}}}</a></li>{{/subpkgs}}
                                     {{^subpkgs}}<li class="list-group-item">None</li>{{/subpkgs}}
                                     </ul>
                                 </div>

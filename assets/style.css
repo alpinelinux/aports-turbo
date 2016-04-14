@@ -81,3 +81,8 @@ nav a.active {
     content: "\e080";
 }
 
+/* support different cursor */
+
+.cursor-pointer {
+    cursor: pointer;
+}

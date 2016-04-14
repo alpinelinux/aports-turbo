@@ -2,7 +2,7 @@
     <script>
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip({container: 'html'});
-            $('.chosen-select').chosen();
+            $('.chosen-select').chosen({allow_single_deselect: true});
         });
     </script>
     <div id="main">
@@ -11,30 +11,36 @@
             <div class="panel-body">
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
-                        <label for="package">Package name</label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{form.name}}" placeholder="use % as wildcard" autofocus>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="name" name="name" value="{{{form.name}}}" placeholder="Package name" autofocus>
+                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="repo">Repository</label>
-                        <select name="repo" class="form-control chosen-select" id="repo">
+                        <select name="branch" data-placeholder="Branch" class="form-control chosen-select" id="branch" >
+                        {{#form.branch}}
+                            <option {{{selected}}} >{{{text}}}</option>
+                        {{/form.branch}}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select name="repo" data-placeholder="Repository" class="form-control chosen-select" id="repo">
                         {{#form.repo}}
-                            <option {{{selected}}} >{{text}}</option>
+                            <option {{{selected}}} >{{{text}}}</option>
                         {{/form.repo}}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="arch">Architecture</label>
-                        <select name="arch" class="form-control chosen-select" id="arch">
+                        <select name="arch" data-placeholder="Arch" class="form-control chosen-select" id="arch">
                         {{#form.arch}}
-                            <option {{{selected}}} >{{text}}</option>
+                            <option {{{selected}}} >{{{text}}}</option>
                         {{/form.arch}}
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="maintainer">Maintainer</label>
-                        <select name="maintainer" class="form-control chosen-select" id="maintainer">
+                        <select name="maintainer" data-placeholder="Maintainer" class="form-control chosen-select" id="maintainer">
                         {{#form.maintainer}}
-                            <option {{{selected}}} value="{{value}}">{{text}}</option>
+                            <option {{{selected}}} >{{{text}}}</option>
                         {{/form.maintainer}}
                         </select>
                     </div>
@@ -48,36 +54,38 @@
                         <th>Version</th>
                         <th>Project</th>
                         <th>Licence</th>
-                        <th>Architecture</th>
+                        <th>Branch</th>
                         <th>Repository</th>
+                        <th>Architecture</th>
                         <th>Maintainer</th>
                         <th>Build date</th>
                     </tr>
                     {{#pkgs}}
                     <tr>
                         <td class="package">
-                            <a data-toggle="tooltip" title="{{name.title}}" href="{{name.path}}">{{name.text}}</a>
+                            <a data-toggle="tooltip" title="{{{name.title}}}" href="{{{name.path}}}">{{{name.text}}}</a>
                         </td>
                         {{#flagged}}
                         <td class="version">
                             <strong>
-                                <a class="text-danger" href="#" data-toggle="tooltip" title="Flagged: {{flagged.date}}">{{version.text}}</a>
+                                <a class="text-danger" href="#" data-toggle="tooltip" title="Flagged: {{{flagged.date}}}">{{{version.text}}}</a>
                             </strong>
                         </td>
                         {{/flagged}}
                         {{^flagged}}
                         <td class="version">
                             <strong>
-                                <a class="text-success" href="{{version.path}}" data-toggle="tooltip" title="{{version.title}}">{{version.text}}</a>
+                                <a class="text-success" href="{{{version.path}}}" data-toggle="tooltip" title="{{{version.title}}}">{{{version.text}}}</a>
                             </strong>
                         </td>
                         {{/flagged}}
-                        <td class="url"><a href="{{url.path}}">{{url.text}}</a></td>
-                        <td class="license">{{license}}</td>
-                        <td class="arch">{{arch}}</td>
-                        <td class="repo">{{repo}}</td>
-                        <td class="maintainer">{{maintainer}}</td>
-                        <td class="bdate">{{build_time}}</td>
+                        <td class="url"><a href="{{{url.path}}}">{{{url.text}}}</a></td>
+                        <td class="license">{{{license}}}</td>
+                        <td class="branch">{{{branch}}}</td>
+                        <td class="repo">{{{repo}}}</td>
+                        <td class="arch">{{{arch}}}</td>
+                        <td class="maintainer">{{{maintainer}}}</td>
+                        <td class="bdate">{{{build_time}}}</td>
                     </tr>
                     {{/pkgs}}
                     {{^pkgs}}
@@ -92,7 +100,7 @@
                     <ul class="pagination">
                     {{#pager}}
                     <li class="{{{class}}}"><a href="/packages?{{{args}}}">{{{page}}}</a></li>
-                     {{/pager}}
+                    {{/pager}}
                     </ul>
                 </nav>
             </div>

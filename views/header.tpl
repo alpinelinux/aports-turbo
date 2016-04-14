@@ -8,6 +8,7 @@
         <!-- Bootstrap -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.4.2/chosen.css">
+        <link rel="stylesheet" href="/assets/bootstrap-chosen.css">
         <link rel="stylesheet" href="/assets/style.css">
         <link rel="shortcut icon" href="/assets/favicon.ico" />
         
@@ -29,6 +30,7 @@
             <nav>
                 <a href="/packages" class="{{nav.package}}" >Packages</a>
                 <a href="/contents" class="{{nav.content}}" >Contents</a>
+                <a href="/flagged" class="{{nav.flagged}}" >Flagged</a>
             </nav>
         </div>
         <div id="sitenav">
@@ -42,5 +44,5 @@
     </header>{{#alert}}
     <div class="alert alert-{{{type}}} alert-dismissible" role="alert" style="margin-top: 20px;">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        {{msg}}
+        {{{msg}}}
     </div>{{/alert}}

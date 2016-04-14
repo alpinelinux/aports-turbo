@@ -1,452 +1,279 @@
-local cjson = require "cjson"
-local sqlite3 = require('lsqlite3')
+local sqlite3   = require('lsqlite3')
 
-local M = {}
+local db = class('db')
 
-M.db = class("db")
-
-function M.db:initialize()
-    self.db = self.db or sqlite3.open("db/aports.db")
+function db:open()
+    self.db = sqlite3.open(conf.db.path)
 end
 
-function M.db:select_query(select, from, operators)
-    local result = { args = {}, sql = "" }
-    local exclude = {"%", "", "all"}
+function db:close()
+    self.db:close()
+end
+
+function db:mergeTables(...)
     local r = {}
-    for k,v in pairs(operators) do
-        if not (turbo.util.is_in(v, exclude)) then
-            if string.match(v, "%%") then
-                r[#r+1] = string.format([[%s like ?]],k)
-            else
-                r[#r+1] = string.format([[%s=?]],k)
+    for k,v in ipairs({...}) do
+        if type(v) == "table" then
+            for k,v in pairs(v) do r[k] = v end
+        end
+    end
+    return r
+end
+
+function db:getDistinct(tbl,col)
+    local r = {}
+    local sql = string.format("SELECT DISTINCT %s from %s", col, tbl)
+    for row in self.db:urows(sql) do
+        table.insert(r,row)
+    end
+    return r
+end
+
+----
+-- format database where arguments
+-- by default we only set fields for packages table
+-- type will set specific tables and arguments
+function db:formatArgs(args, type)
+    local r = {}
+    r.packages = {}
+    for _,v in pairs(model:packageFormat()) do
+        r.packages[v] = args[v]
+    end
+    if type == "packages" then
+        r.packages.name = args.name
+        r.packages.maintainer = nil
+        r.maintainer = {}
+        r.maintainer.name = args.maintainer
+    elseif type == "contents" then
+        r.files = {}
+        r.files.file = args.file
+        r.files.path = args.path
+        r.files.pkgname = args.name
+    end
+    return r
+end
+
+----
+-- exclude all queries and page arguments
+-- create a glob 
+----
+function db:whereQuery(args, type)
+    local r,bind = {},{}
+    for tn,v in pairs(self:formatArgs(args, type)) do
+        for fn,v in pairs(v) do
+            if (v ~= "all") and (v  ~= "") then
+                local tf = string.format("%s.%s", tn, fn)
+                local tb = string.format("%s_%s", tn, fn)
+                table.insert(r, string.format("%s GLOB :%s", tf, tb))
+                bind[tb] = v
             end
-            table.insert(result.args, v)
         end
     end
-    result.sql = next(r) and
-        string.format("select %s from %s where %s", select, from, table.concat(r, " and "))
-        or string.format("select %s from %s", select, from)
-    return result
+    local query = next(r) and string.format("WHERE %s", table.concat(r, " AND ")) or ""
+    return query,bind
 end
 
-function M.db:msg(msg)
-    if conf.debug then print(msg) end
-end
 
-function M.db:sha1sum(str)
-    local digest = turbo.hash.SHA1(str)
-    digest:finalize()
-    return digest:hex()
-end
-
-M.apkindex = class("apkindex", M.db)
-
-function M.apkindex:initialize()
-    self.csum = {}
-    M.db.initialize(self)
-    self.db:exec([[ CREATE TABLE IF NOT EXISTS apkindex('name' text, 'version' text, 'description' text,
-        'url' text, 'license' text, 'arch' text, 'depends' text, 'csum' text,
-        'size' integer, 'installed_size' integer, 'provides' text,
-        'installed_if' text, 'origin' text, 'maintainer' text, 'build_time' integer,
-        'commit' text, 'repo' text) ]]
-    )
-end
-
-function M.apkindex:create()
-    if self:has_changes() then
-        self:msg("apkindex changes found, importing.")
-        self:create_table()
-        self:process()
-        self:replace_table()
-        self:msg("apkindex: finished importing.")
-    else
-        self:msg("apkindex: no changes found.")
-    end
-end
-
-function M.apkindex:format()
-    return {
-        P = "name",
-        V = "version",
-        T = "description",
-        U = "url",
-        L = "license",
-        A = "arch",
-        D = "depends",
-        C = "csum",
-        S = "size",
-        I = "installed_size",
-        p = "provides",
-        i = "install_if",
-        o = "origin",
-        m = "maintainer",
-        t = "build_time",
-        c = "commit",
-    }
-end
-
-function M.apkindex:create_table()
-    self.db:exec([[ CREATE TABLE apkindex_tmp('name' text, 'version' text, 'description' text,
-        'url' text, 'license' text, 'arch' text, 'depends' text, 'csum' text,
-        'size' integer, 'installed_size' integer, 'provides' text,
-        'installed_if' text, 'origin' text, 'maintainer' text, 'build_time' integer,
-        'commit' text, 'repo' text) ]]
-    )
-end
-
-function M.apkindex:replace_table()
-    self.db:exec([[ drop table apkindex ]])
-    self.db:exec([[ alter table apkindex_tmp rename to apkindex ]])
-    self.db:exec([[ create index name on apkindex_tmp(name) ]])
-end
-
-function M.apkindex:get_index(repo, arch)
+function db:getPackages(args, offset)
+    local where,bind = self:whereQuery(args, "packages")
     local r = {}
-    local result = {}
-    local cmdfmt = "curl -s '%s' | tar -O -zx APKINDEX"
-    local index = string.format("%s/edge/%s/%s/APKINDEX.tar.gz", conf.mirror, repo, arch)
-    local f = io.popen(cmdfmt:format(index))
-    for line in f:lines() do
-        if (line ~= "") then
-            local k,v = line:match("^(%a):(.*)")
-            r[k] = v
-        else
-            table.insert(result, r)
-            r = {}
-        end
-    end
-    f:close()
-    return result
-end
-
-function M.apkindex:is_new(repo, arch)
-    local cmdfmt = "curl -s '%s' | tar -O -zx APKINDEX"
-    local index = string.format("%s/edge/%s/%s/APKINDEX.tar.gz", conf.mirror, repo, arch)
-    local f = io.popen(cmdfmt:format(index))
-    local file = f:read("*all")
-    f:close()
-    local sha1sum = self:sha1sum(file)
-    if not self.csum[repo] then 
-        self.csum[repo] = {}
-    else 
-        if (self.csum[repo][arch] == sha1sum) then
-            return false
-        end
-    end
-    self.csum[repo][arch] = sha1sum
-    return true
-end
-
-function M.apkindex:import(repo, arch)
-    local sql = [[ insert into apkindex_tmp ("name", "version", "description", "url", "license",
-        "arch", "depends", "csum", "size", "installed_size", "provides", "installed_if", "origin",
-        "maintainer", "build_time", "commit", "repo") 
-        values (:name, :version, :description, :url, :license, :arch, :depends,
-        :csum, :size, :installed_size, :provides, :installed_if, :origin, :maintainer,
-        :build_time, :commit, :repo) ]]
+    local sql = string.format([[
+        SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
+        maintainer.name as mname, maintainer.email as memail,
+        datetime(flagged.created, 'unixepoch') as flagged FROM packages
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        LEFT JOIN flagged ON packages.fid = flagged.fid
+        %s
+        ORDER BY packages.build_time DESC LIMIT 50 OFFSET %s]], where, offset)
     local stmt = self.db:prepare(sql)
-    self.db:exec([[ begin transaction ]])
-    local packages = self:get_index(repo, arch)
-    for k,v in pairs(packages) do
-        local s = {}
-        for pk,pv in pairs(self:format()) do
-            s[pv] = v[pk] and v[pk] or ""
-        end
-        s.repo = repo
-        stmt:bind_names(s)
-        stmt:step()
-        stmt:reset()
-    end
-    self.db:exec([[ end transaction ]])
-    stmt:finalize()
-end
-
-function M.apkindex:process()
-    for _,repo in ipairs(conf.repo) do
-        for _,arch in ipairs(conf.arch) do
-            self:import(repo, arch)
-        end
-    end
-end
-
-function M.apkindex:has_changes()
-    local changes = false
-    for _,repo in ipairs(conf.repo) do
-        for _,arch in ipairs(conf.arch) do
-            if self:is_new(repo, arch) then
-                changes = true
-            end
-        end
-    end
-    return changes
-end
-
--- get a list of packages
-function M.apkindex:get_packages(name, repo, arch, maintainer, page)
-    local r = {}
-    maintainer = (maintainer == "all") and "all" or string.format("%s%s%s","%",maintainer,"%")
-    local ops = {name=name, repo=repo, arch=arch, maintainer=maintainer}
-    local res = self:select_query("*", "apkindex", ops)
-    res.sql = string.format("%s ORDER BY build_time DESC LIMIT ?,%s", res.sql, conf.pager.limit)
-    table.insert(res.args, (page - 1) * conf.pager.limit)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
+    stmt:bind_names(bind)
+    for row in stmt:nrows(sql) do
+        table.insert(r, row)
     end
     stmt:finalize()
     return r
 end
 
--- get all packages whith deps and arch
-function M.apkindex:get_required_by(deps, arch)
+function db:countPackages(args)
+    local where,bind = self:whereQuery(args, "packages")
+    local sql = string.format([[ SELECT count(*) as qty FROM packages 
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id 
+        %s ]], where)
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(bind)
+    local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
+    stmt:finalize()
+    return r
+end
+
+function db:getPackage(args)
+    local where,bind = self:whereQuery(args, "packages")
+    local sql = string.format([[
+        SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
+        maintainer.name as mname, maintainer.email as memail, 
+        datetime(flagged.created, 'unixepoch') as flagged FROM packages
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id 
+        LEFT JOIN flagged ON packages.fid = flagged.fid
+        %s ]], where)
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(bind)
+    local r = (stmt:step()==sqlite3.ROW) and stmt:get_named_values() or {}
+    stmt:finalize()
+    return r
+end
+
+----
+-- these queries are very similar. maybe simplefy/merge them.
+----
+
+function db:getDepends(pkg)
     local r = {}
-    local ops = {depends=deps, arch=arch}
-    local res = self:select_query("*", "apkindex", ops)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
+    local sql = [[ SELECT DISTINCT packages.* FROM depends
+        LEFT JOIN provides ON depends.name = provides.name
+        LEFT JOIN packages ON provides.pid = packages.id
+        WHERE packages.branch = :branch  AND packages.arch = :arch AND depends.pid = :id
+    ]]
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(pkg)
+    for row in stmt:nrows(sql) do
+        if row.name ~= pkg.name then
+            table.insert(r,row)
+        end
+    end
+    stmt:finalize()  
+    return r
+end
+
+function db:getProvides(pkg)
+    local r = {}
+    local sql = [[ SELECT DISTINCT packages.* FROM provides
+        LEFT JOIN depends ON provides.name = depends.name
+        LEFT JOIN packages ON depends.pid = packages.id
+        WHERE packages.branch = :branch  AND packages.arch = :arch AND provides.pid = :id
+    ]]
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(pkg)
+    for row in stmt:nrows(sql) do
+        if row.name ~= pkg.name then
+            table.insert(r,row)
+        end
     end
     stmt:finalize()
     return r
 end
 
--- get a pacakge or return false if not found
-function M.apkindex:get_package(ops)
+function db:getOrigins(pkg)
     local r = {}
-    local res = self:select_query("*", "apkindex", ops)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return next(r) and r[1] or false
-end
-
--- get all packages which have certain provides
-function M.apkindex:get_depends(provides, name, arch)
-    local r = {}
-    local ops = {provides=provides, name=name, arch=arch}
-    local res = self:select_query("*", "apkindex", ops)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
+    local sql = [[ SELECT DISTINCT packages.* FROM packages
+    WHERE branch = :branch AND repo = :repo AND arch = :arch AND origin = :origin ]]
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(pkg)
+    for row in stmt:nrows(sql) do
+        if row.name ~= pkg.name then
+            table.insert(r,row)
+        end
     end
     stmt:finalize()
     return r
 end
 
--- count query to help our pager
-function M.apkindex:count_packages(name, repo, arch, maintainer)
-    if maintainer ~= "all" then
-        maintainer = string.format("%s%s%s","%",maintainer,"%")
+function db:getContents(args, offset)
+    local r = {}
+    local where,bind = self:whereQuery(args, "contents")
+    local sql = string.format([[
+        SELECT files.*, packages.branch, packages.repo,
+        packages.arch, packages.name FROM files
+        LEFT JOIN packages ON files.pid = packages.id
+        %s
+        ORDER BY files.id DESC LIMIT 50 OFFSET %s ]], where, offset)
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(bind)
+    for row in stmt:nrows(sql) do
+        table.insert(r,row)
     end
-    local ops = {name=name, repo=repo, arch=arch, maintainer=maintainer}
-    local res = self:select_query("count(*)", "apkindex", ops)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
+    stmt:finalize()
+    return r
+end
+
+function db:countContents(args)
+    local where,bind = self:whereQuery(args, "contents")
+    local sql = string.format([[ SELECT count(file) as qty FROM files 
+    LEFT JOIN packages ON files.pid = packages.id %s]], where)
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(bind)
+    local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
+    stmt:finalize()
+    return r
+end
+
+function db:getFlagged(args, offset)
+    local r = {}
+    local where,bind = self:whereQuery(args, "packages")
+    local aw = (where == "") and "WHERE" or "AND"
+    where = string.format("%s %s packages.fid IS NOT NULL", where, aw)
+    local sql = string.format([[
+        SELECT packages.name, packages.version, packages.branch, packages.repo,
+		packages.arch, maintainer.name as mname,
+        datetime(flagged.created, 'unixepoch') as created, flagged.reporter,
+        flagged.new_version, flagged.message FROM packages
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        LEFT JOIN flagged ON packages.fid = flagged.fid
+        %s ORDER BY flagged.created DESC LIMIT 50 OFFSET %s ]], where, offset)
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(bind)
+    for row in stmt:nrows(sql) do
+        table.insert(r,row)
+    end
+    stmt:finalize()
+    return r
+end
+
+-- will not close when not results are found
+function db:countFlagged(args)
+    local r = {}
+    local where,bind = self:whereQuery(args)
+    local aw = (where == "") and "WHERE" or "AND"
+    where = string.format("%s %s packages.fid IS NOT NULL", where, aw)
+    local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(bind)
+    local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
+    stmt:finalize()
+    return r
+end    
+
+function db:flagOrigin(args, pkg)
+    local sql = [[ INSERT INTO flagged (created, reporter, new_version, message)
+        VALUES (strftime('%s', 'now'), :from, :new_version, :message)]]
+    self.db:exec("BEGIN")
+    local stmt = self.db:prepare(sql)
+    stmt:bind_names(args)
     stmt:step()
-    local r = stmt:get_value(0)
+    local fid = stmt:last_insert_rowid()
     stmt:finalize()
-    return r
+    if fid then
+        self.db:exec(
+            string.format([[ 
+                UPDATE packages SET fid = '%s'
+                WHERE branch = '%s' AND repo = '%s' AND origin = '%s'
+                AND version = '%s' ]], fid, pkg.branch, pkg.repo, pkg.origin,
+                pkg.version
+            )
+        )
+        self.db:exec("COMMIT")
+        return fid
+    end
 end
 
--- get all packages with same origin in the same repo
--- with (optional) arch
-function M.apkindex:get_origin(repo, origin, arch)
+function db:flagPackages(args)
     local r = {}
-    local ops = {repo=repo, origin=origin, arch=arch}
-    local res = self:select_query("*", "apkindex", ops)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
-function M.apkindex:get_distinct(column)
-    local r = {}
-    local sql = string.format([[ select distinct %s from apkindex ]], column)
-    for row in self.db:nrows(sql) do
-        r[#r+1] = row
-    end
-    return r
-end
-
----
--- Filelist class
----
-
-M.filelist = class("filelist", M.db)
-
-function M.filelist:initialize()
-    self.csum = {}
-    M.db.initialize(self)
-    self.db:exec([[ CREATE TABLE IF NOT EXISTS filelist ('file' text, 'path' text, 'pkgname' text, 'repo' text, 'arch' text) ]])
-end
-
-function M.filelist:create()
-    if self:has_changes() then
-        self:msg("filelist: changes found, importing.")
-        self:create_table()
-        self:process()
-        self:replace_table()
-        self:msg("filelist: finished importing.")
-    else
-        self:msg("filelist: no changes found.")
-    end
-end
-
-function M.filelist:create_table()
-    self.db:exec([[ create table filelist_tmp ('file' text, 'path' text, 'pkgname' text, 'repo' text, 'arch' text) ]])
-end
-
-function M.filelist:replace_table()
-    self.db:exec([[ drop table filelist ]])
-    self.db:exec([[ alter table filelist_tmp rename to filelist ]])
-    self.db:exec([[ create index pkgname on filelist (pkgname) ]])
-    self.db:exec([[ create index file on filelist (file) ]])
-    self.db:exec([[ create index path on filelist (path) ]])
-end
-
-function M.filelist:get_json(repo, arch)
-    local url = string.format("%s/filelist/%s-%s.json.gz", conf.mirror, repo, arch)
-    local curlfmt = "curl -s '%s' | gunzip"
-    local f = io.popen(curlfmt:format(url))
-    local json = f:read("*all")
-    f:close()
-    return json
-end
-
-function M.filelist:import(repo, arch)
-    local sql = [[ insert into filelist_tmp('file', 'path', 'pkgname', 'repo', 'arch') values (?,?,?,?,?) ]]
-    local stmt = self.db:prepare(sql)
-    local json = self:get_json(repo, arch)
-    local pkgs = cjson.decode(json)
-    self.db:exec([[ begin transaction ]])
-    for pkgname,files in pairs(pkgs) do
-        for _,file in ipairs(files) do
-            stmt:bind_values(file[1], file[2], pkgname, repo, arch)
-            stmt:step()
-            stmt:reset()
-        end
-    end
-    self.db:exec([[ end transaction ]])
-    stmt:finalize()
-end
-    
-function M.filelist:process()
-    for _,repo in ipairs(conf.repo) do
-        for _,arch in ipairs(conf.arch) do
-            self:import(repo, arch)
-        end
-    end
-end
-
--- should be shared
-function M.filelist:is_new(repo, arch)
-    local json = self:get_json(repo, arch)
-    local sha1sum = self:sha1sum(json)
-    if not self.csum[repo] then 
-        self.csum[repo] = {}
-    else 
-        if (self.csum[repo][arch] == sha1sum) then
-            return false
-        end
-    end
-    self.csum[repo][arch] = sha1sum
-    return true
-end
-
-function M.filelist:has_changes()
-    local changes = false
-    for _,repo in ipairs(conf.repo) do
-        for _,arch in ipairs(conf.arch) do
-            if self:is_new(repo, arch) then
-                changes = true
-            end
-        end
-    end
-    return changes
-end
-
-function M.filelist:count_files(file, path, pkgname, arch, repo)
-    local args = {file=file, path=path, pkgname=pkgname, arch=arch, repo=repo}
-    local res = self:select_query("count(*)", "filelist", args)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
+    local sql = string.format([[
+        UPDATE packages SET fid = :fid WHERE branch = :branch 
+        AND repo = :repo AND origin = :origin  AND version = :version 
+    ]])
+    stmt:bind_names(args)
     stmt:step()
-    local r = stmt:get_value(0)
     stmt:finalize()
-    return r
 end
 
--- get the file list from database for a specific package
-function M.filelist:get_files(file, path, pkgname, arch, repo, page)
-    local r = {}
-    local args = {file=file,path=path,pkgname=pkgname,arch=arch,repo=repo}
-    local res = self:select_query("*", "filelist", args)
-    res.sql = string.format("%s LIMIT ?,%s", res.sql, conf.pager.limit)
-    table.insert(res.args, (page - 1) * conf.pager.limit)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
----
--- flagged class
----
-
-M.flagged = class("flagged", M.db)
-
-function M.flagged:initialize()
-    M.db.initialize(self)
-    self.db:exec([[ CREATE TABLE IF NOT EXISTS flagged (origin text, repo text, version text, date integer, message text) ]])
-end
-
-function M.flagged:get_status(origin, repo, version)
-    local r = {}
-    local ops = {origin=origin, repo=repo, version=version}
-    local res = self:select_query("*", "flagged", ops)
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return next(r) and r[1] or false
-end
-
-function M.flagged:get_flagged(ops)
-    local r = {}
-    local res = self:select_query("*", "flagged", ops)
-    res.sql = res.sql .. " ORDER BY date DESC"
-    local stmt = self.db:prepare(res.sql)
-    stmt:bind_names(res.args)
-    for row in stmt:nrows() do
-        r[#r+1] = row
-    end
-    stmt:finalize()
-    return r
-end
-
-function M.flagged:flag_origin(repo, origin, version, message)
-    local sql = [[ insert into flagged(repo, origin, version, date, message)
-        values(?, ?, ?, strftime('%s', 'now'), ?) ]]
-    local stmt = self.db:prepare(sql)
-    stmt:bind_values(repo, origin, version, message)
-    local r = stmt:step()
-    stmt:finalize()
-    return r
-end
-
-return M
+return db

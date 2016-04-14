@@ -1,21 +1,23 @@
 local smtp = require("socket.smtp")
 
-local M = {}
-
 --
--- M.mail class using lua socket
+-- mail class using lua socket
 --
-M.mail = class("mail")
+local mail = class("mail")
 
-function M.mail:initialize()
+function mail:initialize(conf)
+    self.server = conf.mail.server
+    self.domain = conf.mail.domain
     self.rcpt = {}
-    self.from = ""
-    self.headers =  { ["content-type"] = "text/plain; charset=UTF-8" }
+    self.headers =  { 
+        ["content-type"] = "text/plain; charset=UTF-8" 
+    }
     self.body = ""
+    self:set_from(conf.mail.from)
 end
 
 --add an address to the reciepient table
-function M.mail:set_rcpt(rcpt)
+function mail:set_rcpt(rcpt)
     local addr = validate_email(rcpt)
     if addr then
         table.insert(self.rcpt, "<"..addr..">")
@@ -23,7 +25,7 @@ function M.mail:set_rcpt(rcpt)
 end
 
 -- set the from address
-function M.mail:set_from(from)
+function mail:set_from(from)
     local addr = validate_email(from)
     if addr then
         self.from = "<"..addr..">"
@@ -32,33 +34,33 @@ function M.mail:set_from(from)
 end
 
 -- set the to address
-function M.mail:set_to(to)
+function mail:set_to(to)
     if validate_email(to) then
         self.headers.to = to
     end
 end
 
 -- set the cc address
-function M.mail:set_cc(cc)
+function mail:set_cc(cc)
     if validate_email(cc) then
         self.headers.cc = cc
     end
 end
 
 -- set the subject
-function M.mail:set_subject(subject)
+function mail:set_subject(subject)
     if (type(subject) == "string") then
         self.headers.subject = subject
     end
 end
 
 -- set the body
-function M.mail:set_body(body)
+function mail:set_body(body)
     self.body = body
 end
 
 -- send the email, and if failed return the error msg
-function M.mail:send()
+function mail:send()
     r, e = smtp.send{
         from = self.from,
         rcpt = self.rcpt,
@@ -66,12 +68,12 @@ function M.mail:send()
             headers = self.headers,
             body = self.body
         }),
-        server = conf.mail.server,
-        domain = conf.mail.domain
+        server = self.server,
+        domain = self.domain
     }
     if not r then
         return e
     end
 end
 
-return M.mail()
+return mail
