@@ -112,6 +112,9 @@ function model:package(pkg)
         path=string.format("/contents?branch=%s&name=%s&arch=%s&repo=%s", pkg.branch, pkg.name, pkg.arch, pkg.repo),
         text="Contents of package"
     }
+    -- convert branch name to one used in logfiles
+    local log_branch = pkg.branch:sub(1,1)=="v" and string.gsub(pkg.branch:sub(2),"%.","-") or pkg.branch
+    r.log = string.format(conf.buildlog, log_branch, pkg.arch, pkg.repo, pkg.name, pkg.name, pkg.version)
     return r
 end
 

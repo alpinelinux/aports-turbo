@@ -74,7 +74,7 @@
                                             </tr>
                                             <tr>
                                                 <th>Build log</th>
-                                                <td><a href="http://build.alpinelinux.org/buildlogs/build-edge-{{pkg.arch}}/{{pkg.repo}}/{{pkg.origin.text}}/{{pkg.origin.text}}-{{pkg.version.text}}.log">Build log</a></td>
+                                                <td><a href="{{pkg.log}}">Build log</a></td>
                                             </tr>
                                             <tr>
                                                 <th>Contents</th>

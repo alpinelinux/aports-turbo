@@ -58,6 +58,10 @@ config.pager.offset = 3
 ----
 config.giturl = "http://git.alpinelinux.org/cgit/aports/commit/?id=%s"
 ----
+-- url to the build log
+----
+config.buildlog = "http://build.alpinelinux.org/buildlogs/build-%s-%s/%s/%s/%s-%s.log"
+----
 -- directory where views are stored
 ----
 config.tpl = "views"
