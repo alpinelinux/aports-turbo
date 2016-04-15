@@ -18,7 +18,7 @@ end
 
 --add an address to the reciepient table
 function mail:set_rcpt(rcpt)
-    local addr = validate_email(rcpt)
+    local addr = cntrl:validateEmail(rcpt)
     if addr then
         table.insert(self.rcpt, "<"..addr..">")
     end
@@ -26,7 +26,7 @@ end
 
 -- set the from address
 function mail:set_from(from)
-    local addr = validate_email(from)
+    local addr = cntrl:validateEmail(from)
     if addr then
         self.from = "<"..addr..">"
         self.headers.from = from
@@ -35,14 +35,14 @@ end
 
 -- set the to address
 function mail:set_to(to)
-    if validate_email(to) then
+    if cntrl:validateEmail(to) then
         self.headers.to = to
     end
 end
 
 -- set the cc address
 function mail:set_cc(cc)
-    if validate_email(cc) then
+    if cntrl:validateEmail(cc) then
         self.headers.cc = cc
     end
 end
