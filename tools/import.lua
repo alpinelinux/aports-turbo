@@ -1,7 +1,8 @@
 local sqlite    = require("lsqlite3")
-local class     = require("middleclass")
+local turbo     = require("turbo")
 
-local conf       = require("config")
+conf            = require("config")
+local cntrl     = require("controller")
 
 ---
 -- import
@@ -380,6 +381,7 @@ function import:run()
                         self:delPackages(branch, del)
                         self.db:exec("commit")
                         self:updateLocalRepoVersion(branch, repo, arch, version)
+                        cntrl:clearCache()
                     end
                 end
             end

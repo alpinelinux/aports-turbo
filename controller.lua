@@ -262,7 +262,7 @@ end
 function cntrl:clearCache()
     if conf.cache.clear then
         local p = io.popen(string.format("find '%s' -type f -maxdepth '%s'",
-            conf.cache.dir, conf.cache.depth))
+            conf.cache.path, conf.cache.depth))
         for file in p:lines() do
             -- hardcode mandatory base directory
             if file:match("cache") then
