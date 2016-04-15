@@ -12,40 +12,40 @@
                 <form role="form" id="search" class="form-inline">
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="file" name="file" value="{{{form.file}}}" placeholder="File" autofocus>
+                            <input type="text" class="form-control" id="file" name="file" value="{{form.file}}" placeholder="File" autofocus>
                             <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="path" name="path" value="{{{form.path}}}" placeholder="Path">
+                            <input type="text" class="form-control" id="path" name="path" value="{{form.path}}" placeholder="Path">
                             <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="name" name="name" value="{{{form.name}}}" placeholder="Package">
+                            <input type="text" class="form-control" id="name" name="name" value="{{form.name}}" placeholder="Package">
                             <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <select name="branch" data-placeholder="Branch" class="form-control chosen-select" id="branch" >
                         {{#form.branch}}
-                            <option {{{selected}}} >{{{text}}}</option>
+                            <option {{{selected}}} >{{text}}</option>
                         {{/form.branch}}
                         </select>
                     </div>
                     <div class="form-group">
                         <select name="repo" data-placeholder="Repo" class="form-control chosen-select" id="repo">
                         {{#form.repo}}
-                            <option {{{selected}}} >{{{text}}}</option>
+                            <option {{{selected}}} >{{text}}</option>
                         {{/form.repo}}
                         </select>
                     </div>
                     <div class="form-group">
                         <select name="arch" data-placeholder="Arch" class="form-control chosen-select" id="arch">
                         {{#form.arch}}
-                            <option {{{selected}}} >{{{text}}}</option>
+                            <option {{{selected}}} >{{text}}</option>
                         {{/form.arch}}
                         </select>
                     </div>
@@ -63,11 +63,11 @@
                     </tr>
                     {{#contents}}
                     <tr>
-                        <td>{{{file}}}</td>
-                        <td><a href="{{{pkgname.path}}}">{{{pkgname.text}}}</a></td>
-                        <td>{{{branch}}}</td>
-                        <td>{{{repo}}}</td>
-                        <td>{{{arch}}}</td>
+                        <td>{{file}}</td>
+                        <td><a href="{{pkgname.path}}">{{pkgname.text}}</a></td>
+                        <td>{{branch}}</td>
+                        <td>{{repo}}</td>
+                        <td>{{arch}}</td>
                     </tr>
                     {{/contents}}
                     {{^contents}}
