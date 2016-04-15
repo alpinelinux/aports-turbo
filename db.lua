@@ -211,7 +211,7 @@ function db:getFlagged(args, offset)
     local r = {}
     local where,bind = self:whereQuery(args, "packages")
     local aw = (where == "") and "WHERE" or "AND"
-    where = string.format("%s %s packages.fid IS NOT NULL", where, aw)
+    where = string.format("%s %s packages.fid IS NOT NULL AND packages.name = packages.origin", where, aw)
     local sql = string.format([[
         SELECT packages.name, packages.version, packages.branch, packages.repo,
 		packages.arch, maintainer.name as mname,
@@ -234,7 +234,7 @@ function db:countFlagged(args)
     local r = {}
     local where,bind = self:whereQuery(args)
     local aw = (where == "") and "WHERE" or "AND"
-    where = string.format("%s %s packages.fid IS NOT NULL", where, aw)
+    where = string.format("%s %s packages.fid IS NOT NULL AND packages.name = packages.origin", where, aw)
     local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
