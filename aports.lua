@@ -176,5 +176,6 @@ turbo.web.Application({
     {"^/assets/(.*)$", turbo.web.StaticFileHandler, "assets/"},
     {"^/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
 }):listen(conf.port)
+cntrl:clearCache()
 local loop = turbo.ioloop.instance()
 loop:start()
