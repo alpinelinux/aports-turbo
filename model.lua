@@ -1,5 +1,6 @@
 local model     = class('model')
 
+
 -- keys used in alpine linux repository index
 function model:indexFormat(k)
     local f = {

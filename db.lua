@@ -1,5 +1,6 @@
 local sqlite3   = require('lsqlite3')
 
+
 local db = class('db')
 
 function db:open()

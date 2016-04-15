@@ -2,12 +2,12 @@
 
 TURBO_SSL   = true
 turbo       = require("turbo")
+
 conf        = require("config")
 cntrl       = require("controller")
 model       = require("model")
 db          = require("db")
 
-inspect     = require("inspect")
 
 -- packages renderer to display a list of packages
 local packagesRenderer = class("packagesRenderer", turbo.web.RequestHandler)
