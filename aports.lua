@@ -137,7 +137,9 @@ function flagRenderer:post(branch, repo, origin, version)
         self:write(cntrl:flag(pkg, m))
     -- successfully flagged, lets display the flagged origin package
     else
-        cntrl:flagMail(args, pkg)
+        if cntrl:validateEmail(pkg.memail) then
+            cntrl:flagMail(args, pkg)
+        end
         cntrl:clearCache()
         m.alert = {type="success",msg="Succesfully flagged package"}
         self:write(cntrl:package(pkg, m))
