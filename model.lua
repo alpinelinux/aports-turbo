@@ -123,9 +123,10 @@ function model:flagged(pkgs)
     local r = {}
     for k,v in pairs(pkgs) do
         r[k] = {}
-        r[k].name = {
-            path=string.format("/package/%s/%s/%s/%s", v.branch, v.repo, v.arch, v.name),
-            text=v.name,
+        r[k].origin = {
+            --path=string.format("/package/%s/%s/%s", v.branch, v.repo, v.origin),
+            path=string.format("packages?branch=%s&repo=%s&name=%s", v.branch, v.repo, v.origin),
+            text=v.origin,
             title=v.description
         }
         r[k].version = v.version
@@ -142,7 +143,7 @@ end
 
 function model:flaggedForm(args, distinct)
     local m = {}
-    m.name = args.name
+    m.origin = args.origin
     m.branch = model:FormSelect(distinct.branch, args.branch)
     m.repo = model:FormSelect(distinct.repo, args.repo)
     m.arch = model:FormSelect(distinct.arch, args.arch)

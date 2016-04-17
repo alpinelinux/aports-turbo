@@ -158,9 +158,8 @@ end
 
 function flaggedRenderer:get()
     local args = {
-        name = self:get_argument("name","", true),
+        origin = self:get_argument("origin","", true),
         branch = self:get_argument("branch", "", true),
-        arch = self:get_argument("arch", "", true),
         repo = self:get_argument("repo", "", true),
         maintainer = self:get_argument("maintainer", "", true),
         page = tonumber(self:get_argument("page", 1, true)) or 1,

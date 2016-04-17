@@ -12,7 +12,7 @@
                 <form class="form-inline" role="form" id="search">
                     <div class="form-group">
                         <div class="input-group">
-                            <input type="text" class="form-control" id="name" name="name" value="{{form.name}}" placeholder="Package name" autofocus>
+                            <input type="text" class="form-control" id="origin" name="origin" value="{{form.origin}}" placeholder="Origin" autofocus>
                             <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
                         </div>
                     </div>
@@ -31,13 +31,6 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <select name="arch" data-placeholder="Arch" class="form-control chosen-select" id="arch">
-                        {{#form.arch}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.arch}}
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <select name="maintainer" data-placeholder="Maintainer" class="form-control chosen-select" id="maintainer">
                         {{#form.maintainer}}
                             <option {{{selected}}} >{{text}}</option>
@@ -50,12 +43,11 @@
             <div class="table-responsive">
                 <table class="table table-striped table-bordered table-condensed">
                     <tr>
-                        <th>Package</th>
+                        <th>Origin</th>
                         <th>Version</th>
                         <th>New version</th>
                         <th>Branch</th>
                         <th>Repository</th>
-                        <th>Architecture</th>
                         <th>Maintainer</th>
                         <th>Flag date</th>
                         <th>Message</th>
@@ -63,13 +55,12 @@
                     {{#pkgs}}
                     <tr>
                         <td class="package">
-                            <a data-toggle="tooltip" title="{{name.title}}" href="{{name.path}}">{{name.text}}</a>
+                            <a data-toggle="tooltip" title="{{origin.title}}" href="{{origin.path}}">{{origin.text}}</a>
                         </td>
 						<td class="version text-danger"><strong>{{version}}</strong></td>
 						<td class="new_version">{{new_version}}</td>
                         <td class="branch">{{branch}}</td>
-                        <td class="repo">{{repo}}</td>
-                        <td class="arch">{{arch}}</td>
+                        <td class="branch">{{repo}}</td>
                         <td class="maintainer">{{maintainer}}</td>
                         <td class="created">{{created}}</td>
                         <td class="message">

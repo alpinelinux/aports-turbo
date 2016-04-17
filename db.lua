@@ -58,7 +58,7 @@ end
 -- exclude all queries and page arguments
 -- create a glob 
 ----
-function db:whereQuery(args, type)
+function db:whereQuery(args, type, extra)
     local r,bind = {},{}
     for tn,v in pairs(self:formatArgs(args, type)) do
         for fn,v in pairs(v) do
@@ -70,6 +70,7 @@ function db:whereQuery(args, type)
             end
         end
     end
+    if extra then table.insert(r, extra) end
     local query = next(r) and string.format("WHERE %s", table.concat(r, " AND ")) or ""
     return query,bind
 end
@@ -209,17 +210,19 @@ end
 
 function db:getFlagged(args, offset)
     local r = {}
-    local where,bind = self:whereQuery(args, "packages")
-    local aw = (where == "") and "WHERE" or "AND"
-    where = string.format("%s %s packages.fid IS NOT NULL AND packages.name = packages.origin", where, aw)
+    local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
+    local where,bind = self:whereQuery(args, "packages", extra)
     local sql = string.format([[
-        SELECT packages.name, packages.version, packages.branch, packages.repo,
-		packages.arch, maintainer.name as mname,
-        datetime(flagged.created, 'unixepoch') as created, flagged.reporter,
-        flagged.new_version, flagged.message FROM packages
-        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        SELECT packages.origin, packages.version, packages.branch, packages.repo, flagged.new_version,
+        datetime(flagged.created, 'unixepoch') as created,
+        flagged.message, maintainer.name as mname
+        FROM packages
         LEFT JOIN flagged ON packages.fid = flagged.fid
-        %s ORDER BY flagged.created DESC LIMIT 50 OFFSET %s ]], where, offset)
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        %s
+        GROUP BY packages.origin, packages.branch
+        ORDER BY flagged.created DESC LIMIT 50 OFFSET %s
+    ]], where, offset)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
@@ -232,9 +235,8 @@ end
 -- will not close when not results are found
 function db:countFlagged(args)
     local r = {}
-    local where,bind = self:whereQuery(args)
-    local aw = (where == "") and "WHERE" or "AND"
-    where = string.format("%s %s packages.fid IS NOT NULL AND packages.name = packages.origin", where, aw)
+    local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
+    local where,bind = self:whereQuery(args, "packages", extra)
     local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
