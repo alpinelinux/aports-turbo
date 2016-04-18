@@ -65,7 +65,7 @@
                         <td class="maintainer">{{maintainer}}</td>
                         <td class="created">{{created}}</td>
                         <td class="message text-center">
-                            <a class="text-muted" href="#" title="Message" data-toggle="popover" data-container="body" data-placement="left" data-trigger="focus" data-content="{{message}}">
+                            <a class="text-muted" href="#" title="Message" data-toggle="popover" data-container="body" data-placement="left" data-trigger="click" data-content="{{message}}">
                                 <span class="glyphicon glyphicon-comment"></span>
                             </a>
 						</td>
