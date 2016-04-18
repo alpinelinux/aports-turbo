@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+    <ShortName>Alpine Packages Search</ShortName>
+    <Description>Search for Alpine Linux packages (apk)</Description>
+    <Tags>alpine linux packages apk</Tags>
+    <Contact>webmaster@alpinelinux.org</Contact>
+    <Url type="text/html" method="GET" template="https://pkgs.alpinelinux.org/packages">
+        <Param name="name" value="{searchTerms}"/>
+        <Param name="branch" value="edge"/>
+        <Param name="arch" value="x86_64"/>
+    </Url>
+    <LongName>Alpine Linux package database</LongName>
+    <Image height="32" width="32" type="image/png">https://pkgs.alpinelinux.org/assets/favicon.ico</Image>
+    <InputEncoding>UTF-8</InputEncoding>
+</OpenSearchDescription>

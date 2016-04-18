@@ -11,6 +11,8 @@
         <link rel="stylesheet" href="/assets/bootstrap-chosen.css">
         <link rel="stylesheet" href="/assets/style.css">
         <link rel="shortcut icon" href="/assets/favicon.ico" />
+        <!-- opensearch.org -->
+        <link rel="search" type="application/opensearchdescription+xml" href="assets/opensearch.xml" title="Alpine Linux Package Database"/>
         
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
