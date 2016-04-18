@@ -86,3 +86,7 @@ nav a.active {
 .cursor-pointer {
     cursor: pointer;
 }
+
+.popover-content {
+    word-wrap: break-word;
+}

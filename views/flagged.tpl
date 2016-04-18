@@ -3,6 +3,7 @@
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip({container: 'html'});
             $('.chosen-select').chosen({allow_single_deselect: true});
+            $('[data-toggle="popover"]').popover();
         });
     </script>
     <div id="main">
@@ -63,8 +64,10 @@
                         <td class="branch">{{repo}}</td>
                         <td class="maintainer">{{maintainer}}</td>
                         <td class="created">{{created}}</td>
-                        <td class="message">
-                            <span class="glyphicon glyphicon-envelope" aria-hidden="true" title="{{message}}" data-toggle="tooltip"></span>
+                        <td class="message text-center">
+                            <a class="text-muted" href="#" title="Message" data-toggle="popover" data-container="body" data-placement="left" data-trigger="focus" data-content="{{message}}">
+                                <span class="glyphicon glyphicon-comment"></span>
+                            </a>
 						</td>
                     </tr>
                     {{/pkgs}}
