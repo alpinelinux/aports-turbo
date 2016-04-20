@@ -34,7 +34,7 @@ end
 
 -- convert release name to branch name
 function model:branchFormat(branch)
-    return (branch == "edge") and "master" or string.format("%s-stable", branch)
+    return (branch == "edge") and "master" or string.format("%s-stable", branch:sub(2))
 end
 
 -- convert branch name to one used in logfiles
