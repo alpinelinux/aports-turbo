@@ -13,11 +13,11 @@
                                     <div class="table-responsive">
                                         <table class="table table-striped table-bordered table-condensed">
                                             <tr>
-                                                <th>Package</th>
+                                                <th class="text-nowrap">Package</th>
                                                 <td>{{pkg.name}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Version</th>
+                                                <th class="text-nowrap">Version</th>
                                                 <td>
                                                     <strong>
                                                         <a data-toggle="tooltip" title="{{pkg.version.title}}" class="{{pkg.version.class}}" href="{{pkg.version.path}}">{{pkg.version.text}}</a>
@@ -25,59 +25,63 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <th>Description</th>
+                                                <th class="text-nowrap">Description</th>
                                                 <td>{{pkg.description}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Project</th>
+                                                <th class="text-nowrap">Project</th>
                                                 <td><a href="{{pkg.url}}">{{pkg.url}}</a></td>
                                             </tr>
                                             <tr>
-                                                <th>License</th>
+                                                <th class="text-nowrap">License</th>
                                                 <td>{{pkg.license}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Branch</th>
+                                                <th class="text-nowrap">Branch</th>
                                                 <td>{{pkg.branch}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Repository</th>
+                                                <th class="text-nowrap">Repository</th>
                                                 <td>{{pkg.repo}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Architecture</th>
+                                                <th class="text-nowrap">Architecture</th>
                                                 <td>{{pkg.arch}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Size</th>
+                                                <th class="text-nowrap">Size</th>
                                                 <td>{{pkg.size}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Installed size</th>
+                                                <th class="text-nowrap">Installed size</th>
                                                 <td>{{pkg.installed_size}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Origin</th>
+                                                <th class="text-nowrap">Origin</th>
                                                 <td><a href="{{pkg.origin.path}}">{{pkg.origin.text}}</a></td>
                                             </tr>
                                             <tr>
-                                                <th>Maintainer</th>
+                                                <th class="text-nowrap">Maintainer</th>
                                                 <td>{{pkg.maintainer}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Build time</th>
+                                                <th class="text-nowrap">Build time</th>
                                                 <td>{{pkg.build_time}}</td>
                                             </tr>
                                             <tr>
-                                                <th>Commit</th>
+                                                <th class="text-nowrap">Commit</th>
                                                 <td><a href="{{pkg.commit.path}}">{{pkg.commit.text}}</a></td>
                                             </tr>
                                             <tr>
-                                                <th>Build log</th>
+                                                <th class="text-nowrap">Git repository</th>
+                                                <td><a href="{{pkg.git}}">Git repository</a></td>
+                                            </tr>
+                                            <tr>
+                                                <th class="text-nowrap">Build log</th>
                                                 <td><a href="{{pkg.log}}">Build log</a></td>
                                             </tr>
                                             <tr>
-                                                <th>Contents</th>
+                                                <th class="text-nowrap">Contents</th>
                                                 <td><a href="{{pkg.contents.path}}">{{pkg.contents.text}}</a></td>
                                             </tr>
                                         </table>

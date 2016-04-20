@@ -32,6 +32,16 @@ function model:packageFormat(k)
     return k and f[k] or f
 end
 
+-- convert release name to branch name
+function model:branchFormat(branch)
+    return (branch == "edge") and "master" or string.format("%s-stable", branch)
+end
+
+-- convert branch name to one used in logfiles
+function model:logBranchFormat(branch)
+    return branch:sub(1,1)=="v" and string.gsub(branch:sub(2),"%.","-") or branch
+end
+
 -- what happends here with version?
 function model:packages(pkgs)
     local r = {}
@@ -91,7 +101,7 @@ function model:package(pkg)
     end
     r.nav = {package="active"}
     r.version = {text=pkg.version}
-    if pkg.fid then 
+    if pkg.fid then
         r.version.class = "text-danger"
         r.version.title = string.format("Flagged: %s", pkg.flagged)
         r.version.path = "#"
@@ -101,21 +111,22 @@ function model:package(pkg)
         r.version.path = string.format("/flag/%s/%s/%s/%s",pkg.branch, pkg.repo, pkg.origin, pkg.version)
     end
     r.maintainer = pkg.mname or "None"
-    r.origin = { 
-        path=string.format("/package/%s/%s/%s/%s", pkg.branch, pkg.repo, pkg.arch, pkg.origin), 
+    r.origin = {
+        path=string.format("/package/%s/%s/%s/%s", pkg.branch, pkg.repo, pkg.arch, pkg.origin),
         text=pkg.origin
     }
-    r.commit = { 
-        path=string.format(conf.giturl, pkg.commit), 
+    r.commit = {
+        path=string.format(conf.git.commit, pkg.commit),
         text=pkg.commit
     }
-    r.contents = { 
+    r.contents = {
         path=string.format("/contents?branch=%s&name=%s&arch=%s&repo=%s", pkg.branch, pkg.name, pkg.arch, pkg.repo),
         text="Contents of package"
     }
-    -- convert branch name to one used in logfiles
-    local log_branch = pkg.branch:sub(1,1)=="v" and string.gsub(pkg.branch:sub(2),"%.","-") or pkg.branch
-    r.log = string.format(conf.buildlog, log_branch, pkg.arch, pkg.repo, pkg.name, pkg.name, pkg.version)
+    r.git = string.format(conf.git.pkgpath, pkg.repo, pkg.origin,
+        self:branchFormat(pkg.branch))
+    r.log = string.format(conf.buildlog, self:logBranchFormat(pkg.branch),
+        pkg.arch, pkg.repo, pkg.name, pkg.name, pkg.version)
     return r
 end
 
