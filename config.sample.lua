@@ -54,9 +54,17 @@ config.pager.limit = 50
 -- the left and right offset of the pager
 config.pager.offset = 3
 ----
+---- settings for alpine git repo
+----
+config.git = {}
+----
 -- url to alpine git browser
 ----
-config.giturl = "http://git.alpinelinux.org/cgit/aports/commit/?id=%s"
+config.git.commit = "http://git.alpinelinux.org/cgit/aports/commit/?id=%s"
+----
+-- url to the git repo direcotry
+----
+config.git.pkgpath = "http://git.alpinelinux.org/cgit/aports/tree/%s/%s?h=%s"
 ----
 -- url to the build log
 ----
