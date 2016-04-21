@@ -30,6 +30,24 @@ function db:getDistinct(tbl,col)
     return r
 end
 
+-- convert between operators
+function db:globToLike(op, s)
+    local t = {
+        glob = {["%"]="*",["_"]="?"},
+        like = {["*"]="%",["?"]="_"}
+    }
+    if s then return s:gsub("%g",t[op]) end
+end
+
+-- convert query to fuzzy if exist is not set
+function db:fuzzyQuery(args)
+    if (args.name == "") then
+        return args.name
+    else
+        return (args.exact == "on") and args.name or string.format("*%s*", args.name)
+    end
+end
+
 ----
 -- format database where arguments
 -- by default we only set fields for packages table
@@ -41,7 +59,7 @@ function db:formatArgs(args, type)
         r.packages[v] = args[v]
     end
     if type == "packages" then
-        r.packages.name = args.name
+        r.packages.name = self:fuzzyQuery(args)
         r.packages.maintainer = nil
         r.maintainer = {}
         r.maintainer.name = args.maintainer

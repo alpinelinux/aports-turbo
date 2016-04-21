@@ -23,6 +23,7 @@ end
 function packagesRenderer:get()
     local args = {
         name = self:get_argument("name","", true),
+        exact = self:get_argument("exact","", true),
         branch = self:get_argument("branch", "", true),
         arch = self:get_argument("arch", "", true),
         repo = self:get_argument("repo", "", true),

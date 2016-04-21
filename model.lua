@@ -76,6 +76,7 @@ end
 function model:packagesForm(args, distinct)
     local m = {}
     m.name = args.name
+    m.exact = args.exact == "on" and "checked" or nil
     m.branch = self:FormSelect(distinct.branch, args.branch)
     m.repo = self:FormSelect(distinct.repo, args.repo)
     m.arch = self:FormSelect(distinct.arch, args.arch)

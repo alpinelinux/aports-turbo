@@ -3,6 +3,7 @@
         $(document).ready(function(){
             $('[data-toggle="tooltip"]').tooltip({container: 'html'});
             $('.chosen-select').chosen({allow_single_deselect: true});
+            $("[class='bs-switch']").bootstrapSwitch();
         });
     </script>
     <div id="main">
@@ -13,8 +14,13 @@
                     <div class="form-group">
                         <div class="input-group">
                             <input type="text" class="form-control" id="name" name="name" value="{{form.name}}" placeholder="Package name" autofocus>
-                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
+                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards and use exact button for exact searches">?</span>
                         </div>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input class="bs-switch" type="checkbox" name="exact" data-label-text="Exact" {{form.exact}}>
+                        </label>
                     </div>
                     <div class="form-group">
                         <select name="branch" data-placeholder="Branch" class="form-control chosen-select" id="branch" >
