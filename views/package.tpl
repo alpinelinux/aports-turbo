@@ -1,5 +1,10 @@
 {{{header}}}
-    <script>$(document).ready(function(){$('[data-toggle="tooltip"]').tooltip({container: 'html'});});</script>
+    <script>
+        $(document).ready(function(){
+            $('[data-toggle="tooltip"]').tooltip({container: 'html'});
+            $('.panel-collapse').addClass('collapse');
+        });
+    </script>
     <div id="main">
         <div class="panel panel-default">
             <div class="panel-heading">Package details</div>
@@ -101,7 +106,7 @@
                                 <div class="panel-heading">
                                     <a class="accordion-toggle" data-toggle="collapse" href="#collapseDeps" aria-expanded="false">Dependencies ({{deps_qty}})</a>
                                 </div>
-                                <div id="collapseDeps" class="panel-collapse collapse">
+                                <div id="collapseDeps" class="panel-collapse">
                                     <ul class="list-group">
                                     {{#deps}}<li class="list-group-item"><a href="{{path}}">{{text}}</a></li>{{/deps}}
                                     {{^deps}}<li class="list-group-item">None</li>{{/deps}}
@@ -113,7 +118,7 @@
                                 <div class="panel-heading">
                                     <a class="accordion-toggle" data-toggle="collapse" href="#collapseReqBy" aria-expanded="false">Required by ({{reqbys_qty}})</a>
                                 </div>
-                                <div id="collapseReqBy" class="panel-collapse collapse">
+                                <div id="collapseReqBy" class="panel-collapse">
                                     <ul class="list-group">
                                     {{#reqbys}}<li class="list-group-item"><a href="{{path}}">{{text}}</a></li>{{/reqbys}}
                                     {{^reqbys}}<li class="list-group-item">None</li>{{/reqbys}}
@@ -125,7 +130,7 @@
                                 <div class="panel-heading">
                                     <a class="accordion-toggle" data-toggle="collapse" href="#collapseSubPkg" aria-expanded="false">Sub Packages ({{subpkgs_qty}})</a>
                                 </div>
-                                <div id="collapseSubPkg" class="panel-collapse collapse">
+                                <div id="collapseSubPkg" class="panel-collapse">
                                     <ul class="list-group">
                                     {{#subpkgs}}<li class="list-group-item"><a href="{{path}}">{{text}}</a></li>{{/subpkgs}}
                                     {{^subpkgs}}<li class="list-group-item">None</li>{{/subpkgs}}
