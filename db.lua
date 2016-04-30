@@ -127,6 +127,8 @@ function db:countPackages(args)
 end
 
 function db:getPackage(args)
+    -- temp fix for exact lookup of pacakge
+    args.exact = "on"
     local where,bind = self:whereQuery(args, "packages")
     local sql = string.format([[
         SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
