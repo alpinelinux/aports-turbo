@@ -243,7 +243,8 @@ function model:flagMail(pkg, args)
         maintainer = pkg.mname,
         origin = pkg.origin,
         from = args.from,
-        message = args.message
+        message = args.message,
+        new_version = args.new_version
     }
 end
 
