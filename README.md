@@ -9,7 +9,7 @@ On Alpine Linux it should be enough to install turbo and deps by:
 apk add luajit lua5.1 lua-turbo lua-sqlite lua-lustache lua-socket
 
 Copy config.sample.lua to config.lua and edit it.
-You can start the application by starting ./aporst.lua or on Alpine Linux with turbo's init.d (see conf.d/turbo for settings)
+You can start the application by starting ./aports.lua or on Alpine Linux with turbo's init.d (see conf.d/turbo for settings)
 
 #### Creating/updating the database
 
