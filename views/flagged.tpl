@@ -58,8 +58,8 @@
                         <td class="package">
                             <a data-toggle="tooltip" title="{{origin.title}}" href="{{origin.path}}">{{origin.text}}</a>
                         </td>
-						<td class="version text-danger"><strong>{{version}}</strong></td>
-						<td class="new_version">{{new_version}}</td>
+                        <td class="version text-danger"><strong>{{version}}</strong></td>
+                        <td class="new_version">{{new_version}}</td>
                         <td class="branch">{{branch}}</td>
                         <td class="branch">{{repo}}</td>
                         <td class="maintainer">{{maintainer}}</td>
@@ -68,7 +68,7 @@
                             <a class="text-muted" href="#" title="Message" data-toggle="popover" data-container="body" data-placement="left" data-trigger="click" data-content="{{message}}">
                                 <span class="glyphicon glyphicon-comment"></span>
                             </a>
-						</td>
+                        </td>
                     </tr>
                     {{/pkgs}}
                     {{^pkgs}}

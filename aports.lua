@@ -115,7 +115,7 @@ function flagRenderer:post(branch, repo, origin, version)
     -- check if email is valid
     elseif not cntrl:validateEmail(args.from) then
         m.form.status = {from="has-error"}
-        m.alert = {type="danger",msg="Please provide a valid email address"} 
+        m.alert = {type="danger",msg="Please provide a valid email address"}
         self:write(cntrl:flag(pkg, m))
     -- check if new version is provided
     elseif args.new_version == "" then

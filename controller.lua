@@ -104,7 +104,7 @@ end
 
 function cntrl:flagMail(args, pkg)
     local subject = string.format(
-        "Alpine aport %s has been flagged out of date", 
+        "Alpine aport %s has been flagged out of date",
         pkg.origin
     )
     local m = model:flagMail(pkg, args)
@@ -157,7 +157,7 @@ end
 -- (total) total amount of results
 -- (limit) results per page/query
 -- (current) the current page
--- (offset) the left and right offset from current page 
+-- (offset) the left and right offset from current page
 function cntrl:createPager(total, limit, current, offset)
     local r = {}
     local pages = math.ceil(total/limit)
@@ -275,4 +275,3 @@ function cntrl:clearCache()
 end
 
 return cntrl
-

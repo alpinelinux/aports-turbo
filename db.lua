@@ -56,7 +56,7 @@ end
 
 ----
 -- exclude all queries and page arguments
--- create a glob 
+-- create a glob
 ----
 function db:whereQuery(args, type, extra)
     local r,bind = {},{}
@@ -98,8 +98,8 @@ end
 
 function db:countPackages(args)
     local where,bind = self:whereQuery(args, "packages")
-    local sql = string.format([[ SELECT count(*) as qty FROM packages 
-        LEFT JOIN maintainer ON packages.maintainer = maintainer.id 
+    local sql = string.format([[ SELECT count(*) as qty FROM packages
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
         %s ]], where)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
@@ -114,9 +114,9 @@ function db:getPackage(args)
     local where,bind = self:whereQuery(args, "packages")
     local sql = string.format([[
         SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
-        maintainer.name as mname, maintainer.email as memail, 
+        maintainer.name as mname, maintainer.email as memail,
         datetime(flagged.created, 'unixepoch') as flagged FROM packages
-        LEFT JOIN maintainer ON packages.maintainer = maintainer.id 
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
         LEFT JOIN flagged ON packages.fid = flagged.fid
         %s ]], where)
     local stmt = self.db:prepare(sql)
@@ -144,7 +144,7 @@ function db:getDepends(pkg)
             table.insert(r,row)
         end
     end
-    stmt:finalize()  
+    stmt:finalize()
     return r
 end
 
@@ -201,7 +201,7 @@ end
 
 function db:countContents(args)
     local where,bind = self:whereQuery(args, "contents")
-    local sql = string.format([[ SELECT count(file) as qty FROM files 
+    local sql = string.format([[ SELECT count(file) as qty FROM files
     LEFT JOIN packages ON files.pid = packages.id %s]], where)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
@@ -245,7 +245,7 @@ function db:countFlagged(args)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
     stmt:finalize()
     return r
-end    
+end
 
 function db:flagOrigin(args, pkg)
     local sql = [[ INSERT INTO flagged (created, reporter, new_version, message)
@@ -258,7 +258,7 @@ function db:flagOrigin(args, pkg)
     stmt:finalize()
     if fid then
         self.db:exec(
-            string.format([[ 
+            string.format([[
                 UPDATE packages SET fid = '%s'
                 WHERE branch = '%s' AND repo = '%s' AND origin = '%s'
                 AND version = '%s' ]], fid, pkg.branch, pkg.repo, pkg.origin,
@@ -273,8 +273,8 @@ end
 function db:flagPackages(args)
     local r = {}
     local sql = string.format([[
-        UPDATE packages SET fid = :fid WHERE branch = :branch 
-        AND repo = :repo AND origin = :origin  AND version = :version 
+        UPDATE packages SET fid = :fid WHERE branch = :branch
+        AND repo = :repo AND origin = :origin  AND version = :version
     ]])
     stmt:bind_names(args)
     stmt:step()
