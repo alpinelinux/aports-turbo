@@ -9,8 +9,8 @@ function mail:initialize(conf)
     self.server = conf.mail.server
     self.domain = conf.mail.domain
     self.rcpt = {}
-    self.headers =  { 
-        ["content-type"] = "text/plain; charset=UTF-8" 
+    self.headers =  {
+        ["content-type"] = "text/plain; charset=UTF-8"
     }
     self.body = ""
     self:set_from(conf.mail.from)

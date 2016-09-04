@@ -119,7 +119,7 @@ function import:createTables()
         'name' TEXT,
         'email' TEXT
     )]])
-    self.db:exec([[CREATE INDEX IF NOT EXISTS 'maintainer_name' 
+    self.db:exec([[CREATE INDEX IF NOT EXISTS 'maintainer_name'
         on maintainer (name)]])
     self.db:exec([[ CREATE TABLE IF NOT EXISTS 'repoversion' (
         'branch' TEXT,
@@ -127,7 +127,7 @@ function import:createTables()
         'arch' TEXT,
         'version' TEXT
     )]])
-    self.db:exec([[CREATE UNIQUE INDEX IF NOT EXISTS 'repoversion_version' 
+    self.db:exec([[CREATE UNIQUE INDEX IF NOT EXISTS 'repoversion_version'
         on repoversion (branch, repo, arch)]])
     self.db:exec([[ CREATE TABLE IF NOT EXISTS 'flagged' (
         'fid' INTEGER primary key,
@@ -137,7 +137,7 @@ function import:createTables()
         'message' TEXT
     ) ]])
 end
- 
+
 ---
 -- get the current git describe from DESCRIPTION file
 ---
@@ -151,7 +151,7 @@ function import:getRepoVersion(branch, repo, arch)
 end
 
 function import:getLocalRepoVersion(branch, repo, arch)
-    local sql = [[ select version from repoversion 
+    local sql = [[ select version from repoversion
         where branch = ? and repo = ? and arch = ? ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_values(branch, repo, arch)
