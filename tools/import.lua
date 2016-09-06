@@ -349,7 +349,7 @@ function import:addFiles(pid, apk, pkg)
         file.pkgname = pkg.name
         file.pid = pid
         stmt:bind_names(file)
-        local step = stmt:step()
+        stmt:step()
         stmt:reset()
     end
     stmt:finalize()

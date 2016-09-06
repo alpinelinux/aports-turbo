@@ -226,7 +226,6 @@ end
 
 -- will not close when not results are found
 function db:countFlagged(args)
-    local r = {}
     local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
     local where,bind = self:whereQuery(args, "packages", extra)
     local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)

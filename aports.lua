@@ -89,7 +89,6 @@ end
 
 function flagRenderer:get(branch, repo, origin, version)
     local ops = {branch=branch, repo=repo, origin=origin, version=version}
-    local page = cntrl:flag(ops)
     local pkg = cntrl:getNotFlagged(ops)
     if pkg then
         self:write(cntrl:flag(pkg))

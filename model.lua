@@ -164,7 +164,7 @@ end
 
 function model:packageRelations(pkgs)
     local r = {}
-    for k,v in pairs(pkgs) do
+    for _,v in pairs(pkgs) do
         local path = string.format("/package/%s/%s/%s/%s", v.branch, v.repo, v.arch, v.name)
         table.insert(r, {path=path, text=v.name})
     end
@@ -176,7 +176,7 @@ function model:pagerModel(args, pager)
     if pager.last > 1 then
         table.insert(pager, 1, "&laquo;")
         table.insert(pager, "&raquo;")
-        for k,p in ipairs(pager) do
+        for _,p in ipairs(pager) do
             local r = {}
             for g,v in pairs(args) do
                 if (g=="page") then
