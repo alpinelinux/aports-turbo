@@ -11,16 +11,6 @@ function db:close()
     self.db:close()
 end
 
-function db:mergeTables(...)
-    local r = {}
-    for k,v in ipairs({...}) do
-        if type(v) == "table" then
-            for k,v in pairs(v) do r[k] = v end
-        end
-    end
-    return r
-end
-
 function db:getDistinct(tbl,col)
     local r = {}
     local sql = string.format("SELECT DISTINCT %s from %s", col, tbl)
@@ -268,17 +258,6 @@ function db:flagOrigin(args, pkg)
         self.db:exec("COMMIT")
         return fid
     end
-end
-
-function db:flagPackages(args)
-    local r = {}
-    local sql = string.format([[
-        UPDATE packages SET fid = :fid WHERE branch = :branch
-        AND repo = :repo AND origin = :origin  AND version = :version
-    ]])
-    stmt:bind_names(args)
-    stmt:step()
-    stmt:finalize()
 end
 
 return db

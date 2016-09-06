@@ -40,13 +40,6 @@ function mail:set_to(to)
     end
 end
 
--- set the cc address
-function mail:set_cc(cc)
-    if cntrl:validateEmail(cc) then
-        self.headers.cc = cc
-    end
-end
-
 -- set the subject
 function mail:set_subject(subject)
     if (type(subject) == "string") then

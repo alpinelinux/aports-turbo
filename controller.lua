@@ -210,22 +210,6 @@ function cntrl:humanBytes(bytes)
     return math.floor(result * mult + 0.5) / mult.." "..size[factor+1]
 end
 
--- format a timestamp to date
-function cntrl:formatDate(ts)
-    return os.date('%Y-%m-%d %H:%M:%S', ts)
-end
-
--- urlencode a string
-function cntrl:urlEncode(str)
-    if (str) then
-        str = string.gsub (str, "\n", "\r\n")
-        str = string.gsub (str, "([^%w ])",
-        function (c) return string.format ("%%%02X", string.byte(c)) end)
-        str = string.gsub (str, " ", "+")
-    end
-    return str
-end
-
 -- read the tpl file into a string and return it
 function cntrl:tpl(tpl)
     local tpl = string.format("%s/%s", conf.tpl, tpl)
@@ -233,11 +217,6 @@ function cntrl:tpl(tpl)
     local r = f:read("*all")
     f:close()
     return r
-end
-
--- check if string begins with prefix
-function cntrl:stringBegins(str, prefix)
-    return str:sub(1,#prefix)==prefix
 end
 
 -- urlencode a string
