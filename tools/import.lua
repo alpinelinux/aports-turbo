@@ -155,7 +155,7 @@ function import:getLocalRepoVersion(branch, repo, arch)
         where branch = ? and repo = ? and arch = ? ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_values(branch, repo, arch)
-    local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or false
+    local r = (stmt:step() == sqlite.ROW) and stmt:get_value(0) or false
     stmt:finalize()
     return r
 end
