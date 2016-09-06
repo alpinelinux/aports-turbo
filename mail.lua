@@ -54,7 +54,7 @@ end
 
 -- send the email, and if failed return the error msg
 function mail:send()
-    r, e = smtp.send{
+    local r, e = smtp.send{
         from = self.from,
         rcpt = self.rcpt,
         source = smtp.message({

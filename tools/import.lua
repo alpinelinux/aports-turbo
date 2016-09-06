@@ -328,7 +328,7 @@ function import:addFields(pid, pkg)
 end
 
 function import:getFilelist(apk)
-    r = {}
+    local r = {}
     local f = io.popen(string.format("tar ztf '%s'", apk))
     for line in f:lines() do
         if not (line:match("^%.") or line:match("/$")) then

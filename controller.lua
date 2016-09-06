@@ -112,7 +112,7 @@ function cntrl:flagMail(args, pkg)
     mail:set_rcpt(pkg.memail)
     mail:set_to(pkg.memail)
     mail:set_subject(subject)
-    body = lustache:render(self:tpl("mail_body.tpl"), m)
+    local body = lustache:render(self:tpl("mail_body.tpl"), m)
     mail:set_body(body)
     mail:send()
 end

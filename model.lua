@@ -192,7 +192,7 @@ function model:pagerModel(args, pager)
                     r[#r+1]=string.format("%s=%s", cntrl:urlEncode(g), cntrl:urlEncode(v))
                 end
             end
-            path = table.concat(r, '&amp;')
+            local path = table.concat(r, '&amp;')
             class = (args.page == p) and "active" or ""
             table.insert(result, {args=path, class=class, page=p})
         end
