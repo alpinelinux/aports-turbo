@@ -109,7 +109,6 @@ function cntrl:flagMail(args, pkg)
     )
     local m = model:flagMail(pkg, args)
     mail:initialize(conf)
-    mail:set_rcpt(pkg.memail)
     mail:set_to(pkg.memail)
     mail:set_subject(subject)
     local body = lustache:render(self:tpl("mail_body.tpl"), m)
@@ -192,13 +191,6 @@ function cntrl:verifyRecaptcha(response)
     end
     local result = turbo.escape.json_decode(res.body)
     return result.success
-end
-
--- return a filtered valid email address or nil
-function cntrl:validateEmail(addr)
-    if addr then
-        return addr:match("[%w%._%+%-%%%]+@[%w%._%-]+%.%w+")
-    end
 end
 
 -- convert bytes to human readable

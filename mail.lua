@@ -1,5 +1,10 @@
 local smtp = require("socket.smtp")
 
+local utils = require("utils")
+
+local parse_email_addr = utils.parse_email_addr
+local format_email_addr = utils.format_email_addr
+
 --
 -- mail class using lua socket
 --
@@ -16,27 +21,21 @@ function mail:initialize(conf)
     self:set_from(conf.mail.from)
 end
 
---add an address to the reciepient table
-function mail:set_rcpt(rcpt)
-    local addr = cntrl:validateEmail(rcpt)
-    if addr then
-        table.insert(self.rcpt, "<"..addr..">")
-    end
-end
-
 -- set the from address
 function mail:set_from(from)
-    local addr = cntrl:validateEmail(from)
-    if addr then
-        self.from = "<"..addr..">"
-        self.headers.from = from
+    local name, email = parse_email_addr(from)
+    if email then
+        self.from = "<"..email..">"
+        self.headers.from = format_email_addr(name, email)
     end
 end
 
 -- set the to address
 function mail:set_to(to)
-    if cntrl:validateEmail(to) then
-        self.headers.to = to
+    local name, email = parse_email_addr(to)
+    if email then
+        table.insert(self.rcpt, "<"..email..">")
+        self.headers.to = format_email_addr(name, email)
     end
 end
 

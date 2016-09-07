@@ -3,6 +3,7 @@ local turbo     = require("turbo")
 
 conf            = require("config")
 local cntrl     = require("controller")
+local utils     = require("utils")
 
 ---
 -- import
@@ -254,13 +255,9 @@ end
 
 function import:formatMaintainer(maintainer)
     if maintainer then
-        local r = {}
-        maintainer = maintainer:match("^%s*(.-)%s*$")
-        local name,email = maintainer:match("(.*)(<.*>)")
-        r.email = email:match("[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?")
-        if r.email then
-            r.name = name:match("^%s*(.-)%s*$")
-            return r
+        local name, email = utils.parse_email_addr(maintainer)
+        if email then
+            return { name = name, email = email }
         end
     end
 end

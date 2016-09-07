@@ -7,7 +7,9 @@ conf        = require("config")
 cntrl       = require("controller")
 model       = require("model")
 db          = require("db")
+local utils = require("utils")
 
+local is_valid_email = utils.is_valid_email
 
 -- packages renderer to display a list of packages
 local packagesRenderer = class("packagesRenderer", turbo.web.RequestHandler)
@@ -112,7 +114,7 @@ function flagRenderer:post(branch, repo, origin, version)
     if not pkg then
         error(turbo.web.HTTPError(404, "404 Page not found."))
     -- check if email is valid
-    elseif not cntrl:validateEmail(args.from) then
+    elseif not is_valid_email(args.from) then
         m.form.status = {from="has-error"}
         m.alert = {type="danger",msg="Please provide a valid email address"}
         self:write(cntrl:flag(pkg, m))
@@ -136,7 +138,7 @@ function flagRenderer:post(branch, repo, origin, version)
         self:write(cntrl:flag(pkg, m))
     -- successfully flagged, lets display the flagged origin package
     else
-        if cntrl:validateEmail(pkg.memail) then
+        if is_valid_email(pkg.memail) then
             cntrl:flagMail(args, pkg)
         end
         cntrl:clearCache()
