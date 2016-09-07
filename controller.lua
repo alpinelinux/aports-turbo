@@ -197,7 +197,7 @@ end
 -- return a filtered valid email address or nil
 function cntrl:validateEmail(addr)
     if addr then
-        return addr:match("[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?")
+        return addr:match("[%w%._%+%-%%%]+@[%w%._%-]+%.%w+")
     end
 end
 
