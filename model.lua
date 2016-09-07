@@ -1,6 +1,7 @@
 local utils     = require('utils')
 
 local default    = utils.default
+local escape_uri = utils.escape_uri
 local model      = class('model')
 
 
@@ -192,7 +193,7 @@ function model:pagerModel(args, pager)
                     end
                 end
                 if v ~= "" then
-                    r[#r+1]=string.format("%s=%s", cntrl:urlEncode(g), cntrl:urlEncode(v))
+                    r[#r+1]=string.format("%s=%s", escape_uri(g), escape_uri(v))
                 end
             end
             local path = table.concat(r, '&amp;')

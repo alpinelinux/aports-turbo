@@ -219,17 +219,6 @@ function cntrl:tpl(tpl)
     return r
 end
 
--- urlencode a string
-function cntrl:urlEncode(str)
-    if (str) then
-        str = string.gsub(str, "\n", "\r\n")
-        str = string.gsub(str, "([^%w ])",
-        function (c) return string.format("%%%02X", string.byte(c)) end)
-        str = string.gsub(str, " ", "+")
-    end
-    return str
-end
-
 ----
 -- clear reverse proxy cache
 ----
