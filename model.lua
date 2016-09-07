@@ -1,4 +1,7 @@
-local model     = class('model')
+local utils     = require('utils')
+
+local default    = utils.default
+local model      = class('model')
 
 
 -- keys used in alpine linux repository index
@@ -97,7 +100,7 @@ function model:package(pkg)
     local r = {}
     -- populate default values or None if not set.
     for _,v in pairs(self:packageFormat()) do
-        r[v] = cntrl:isSet(pkg[v]) or "None"
+        r[v] = default(pkg[v], "None")
     end
     r.nav = {package="active"}
     r.version = {text=pkg.version}

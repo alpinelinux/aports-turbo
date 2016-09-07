@@ -231,13 +231,6 @@ function cntrl:urlEncode(str)
 end
 
 ----
--- check if string is unset or empty
-----
-function cntrl:isSet(str)
-   if str and str ~= "" then return str end
-end
-
-----
 -- clear reverse proxy cache
 ----
 function cntrl:clearCache()
