@@ -1,12 +1,11 @@
 #!/usr/bin/env luajit
 
 TURBO_SSL   = true
-turbo       = require("turbo")
+local turbo = require("turbo")
 
-conf        = require("config")
-cntrl       = require("controller")
-model       = require("model")
-db          = require("db")
+local conf  = require("config")
+local cntrl = require("controller")
+local db    = require("db")
 local utils = require("utils")
 
 local is_valid_email = utils.is_valid_email

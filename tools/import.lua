@@ -1,7 +1,7 @@
 local sqlite    = require("lsqlite3")
 local turbo     = require("turbo")
 
-conf            = require("config")
+local conf      = require("config")
 local cntrl     = require("controller")
 local utils     = require("utils")
 

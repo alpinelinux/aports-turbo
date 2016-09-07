@@ -1,5 +1,8 @@
 local sqlite3   = require('lsqlite3')
 
+local conf      = require('config')
+local model     = require('model')
+
 
 local db = class('db')
 

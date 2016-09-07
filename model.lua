@@ -1,4 +1,5 @@
-local utils     = require('utils')
+local conf       = require('config')
+local utils      = require('utils')
 
 local default    = utils.default
 local escape_uri = utils.escape_uri

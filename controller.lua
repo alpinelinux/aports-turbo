@@ -1,7 +1,11 @@
+local turbo     = require("turbo")
 -- we use lustache instead of turbo's limited mustache engine
 local lustache  = require("lustache")
 
+local conf      = require("config")
+local db        = require("db")
 local mail      = require("mail")
+local model     = require("model")
 
 
 local cntrl     = class("cntrl")
