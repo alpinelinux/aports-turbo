@@ -1,8 +1,9 @@
 local sqlite    = require("lsqlite3")
 local turbo     = require("turbo")
 
-conf            = require("config")
+local conf      = require("config")
 local cntrl     = require("controller")
+local utils     = require("utils")
 
 ---
 -- import
@@ -155,7 +156,7 @@ function import:getLocalRepoVersion(branch, repo, arch)
         where branch = ? and repo = ? and arch = ? ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_values(branch, repo, arch)
-    local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or false
+    local r = (stmt:step() == sqlite.ROW) and stmt:get_value(0) or false
     stmt:finalize()
     return r
 end
@@ -254,13 +255,9 @@ end
 
 function import:formatMaintainer(maintainer)
     if maintainer then
-        local r = {}
-        maintainer = maintainer:match("^%s*(.-)%s*$")
-        local name,email = maintainer:match("(.*)(<.*>)")
-        r.email = email:match("[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?")
-        if r.email then
-            r.name = name:match("^%s*(.-)%s*$")
-            return r
+        local name, email = utils.parse_email_addr(maintainer)
+        if email then
+            return { name = name, email = email }
         end
     end
 end
@@ -328,7 +325,7 @@ function import:addFields(pid, pkg)
 end
 
 function import:getFilelist(apk)
-    r = {}
+    local r = {}
     local f = io.popen(string.format("tar ztf '%s'", apk))
     for line in f:lines() do
         if not (line:match("^%.") or line:match("/$")) then
@@ -349,7 +346,7 @@ function import:addFiles(pid, apk, pkg)
         file.pkgname = pkg.name
         file.pid = pid
         stmt:bind_names(file)
-        local step = stmt:step()
+        stmt:step()
         stmt:reset()
     end
     stmt:finalize()

@@ -1,13 +1,14 @@
 #!/usr/bin/env luajit
 
 TURBO_SSL   = true
-turbo       = require("turbo")
+local turbo = require("turbo")
 
-conf        = require("config")
-cntrl       = require("controller")
-model       = require("model")
-db          = require("db")
+local conf  = require("config")
+local cntrl = require("controller")
+local db    = require("db")
+local utils = require("utils")
 
+local is_valid_email = utils.is_valid_email
 
 -- packages renderer to display a list of packages
 local packagesRenderer = class("packagesRenderer", turbo.web.RequestHandler)
@@ -89,7 +90,6 @@ end
 
 function flagRenderer:get(branch, repo, origin, version)
     local ops = {branch=branch, repo=repo, origin=origin, version=version}
-    local page = cntrl:flag(ops)
     local pkg = cntrl:getNotFlagged(ops)
     if pkg then
         self:write(cntrl:flag(pkg))
@@ -113,7 +113,7 @@ function flagRenderer:post(branch, repo, origin, version)
     if not pkg then
         error(turbo.web.HTTPError(404, "404 Page not found."))
     -- check if email is valid
-    elseif not cntrl:validateEmail(args.from) then
+    elseif not is_valid_email(args.from) then
         m.form.status = {from="has-error"}
         m.alert = {type="danger",msg="Please provide a valid email address"}
         self:write(cntrl:flag(pkg, m))
@@ -137,7 +137,7 @@ function flagRenderer:post(branch, repo, origin, version)
         self:write(cntrl:flag(pkg, m))
     -- successfully flagged, lets display the flagged origin package
     else
-        if cntrl:validateEmail(pkg.memail) then
+        if is_valid_email(pkg.memail) then
             cntrl:flagMail(args, pkg)
         end
         cntrl:clearCache()

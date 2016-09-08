@@ -1,5 +1,8 @@
 local sqlite3   = require('lsqlite3')
 
+local conf      = require('config')
+local model     = require('model')
+
 
 local db = class('db')
 
@@ -9,16 +12,6 @@ end
 
 function db:close()
     self.db:close()
-end
-
-function db:mergeTables(...)
-    local r = {}
-    for k,v in ipairs({...}) do
-        if type(v) == "table" then
-            for k,v in pairs(v) do r[k] = v end
-        end
-    end
-    return r
 end
 
 function db:getDistinct(tbl,col)
@@ -236,7 +229,6 @@ end
 
 -- will not close when not results are found
 function db:countFlagged(args)
-    local r = {}
     local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
     local where,bind = self:whereQuery(args, "packages", extra)
     local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)
@@ -268,17 +260,6 @@ function db:flagOrigin(args, pkg)
         self.db:exec("COMMIT")
         return fid
     end
-end
-
-function db:flagPackages(args)
-    local r = {}
-    local sql = string.format([[
-        UPDATE packages SET fid = :fid WHERE branch = :branch
-        AND repo = :repo AND origin = :origin  AND version = :version
-    ]])
-    stmt:bind_names(args)
-    stmt:step()
-    stmt:finalize()
 end
 
 return db

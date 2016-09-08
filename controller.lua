@@ -1,7 +1,11 @@
+local turbo     = require("turbo")
 -- we use lustache instead of turbo's limited mustache engine
 local lustache  = require("lustache")
 
+local conf      = require("config")
+local db        = require("db")
 local mail      = require("mail")
+local model     = require("model")
 
 
 local cntrl     = class("cntrl")
@@ -109,10 +113,9 @@ function cntrl:flagMail(args, pkg)
     )
     local m = model:flagMail(pkg, args)
     mail:initialize(conf)
-    mail:set_rcpt(pkg.memail)
     mail:set_to(pkg.memail)
     mail:set_subject(subject)
-    body = lustache:render(self:tpl("mail_body.tpl"), m)
+    local body = lustache:render(self:tpl("mail_body.tpl"), m)
     mail:set_body(body)
     mail:send()
 end
@@ -194,13 +197,6 @@ function cntrl:verifyRecaptcha(response)
     return result.success
 end
 
--- return a filtered valid email address or nil
-function cntrl:validateEmail(addr)
-    if addr then
-        return addr:match("[A-Za-z0-9%.%%%+%-]+@[A-Za-z0-9%.%%%+%-]+%.%w%w%w?%w?")
-    end
-end
-
 -- convert bytes to human readable
 function cntrl:humanBytes(bytes)
     local mult = 10^(2)
@@ -210,22 +206,6 @@ function cntrl:humanBytes(bytes)
     return math.floor(result * mult + 0.5) / mult.." "..size[factor+1]
 end
 
--- format a timestamp to date
-function cntrl:formatDate(ts)
-    return os.date('%Y-%m-%d %H:%M:%S', ts)
-end
-
--- urlencode a string
-function cntrl:urlEncode(str)
-    if (str) then
-        str = string.gsub (str, "\n", "\r\n")
-        str = string.gsub (str, "([^%w ])",
-        function (c) return string.format ("%%%02X", string.byte(c)) end)
-        str = string.gsub (str, " ", "+")
-    end
-    return str
-end
-
 -- read the tpl file into a string and return it
 function cntrl:tpl(tpl)
     local tpl = string.format("%s/%s", conf.tpl, tpl)
@@ -233,29 +213,6 @@ function cntrl:tpl(tpl)
     local r = f:read("*all")
     f:close()
     return r
-end
-
--- check if string begins with prefix
-function cntrl:stringBegins(str, prefix)
-    return str:sub(1,#prefix)==prefix
-end
-
--- urlencode a string
-function cntrl:urlEncode(str)
-    if (str) then
-        str = string.gsub(str, "\n", "\r\n")
-        str = string.gsub(str, "([^%w ])",
-        function (c) return string.format("%%%02X", string.byte(c)) end)
-        str = string.gsub(str, " ", "+")
-    end
-    return str
-end
-
-----
--- check if string is unset or empty
-----
-function cntrl:isSet(str)
-   if str and str ~= "" then return str end
 end
 
 ----

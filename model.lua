@@ -1,4 +1,9 @@
-local model     = class('model')
+local conf       = require('config')
+local utils      = require('utils')
+
+local default    = utils.default
+local escape_uri = utils.escape_uri
+local model      = class('model')
 
 
 -- keys used in alpine linux repository index
@@ -97,7 +102,7 @@ function model:package(pkg)
     local r = {}
     -- populate default values or None if not set.
     for _,v in pairs(self:packageFormat()) do
-        r[v] = cntrl:isSet(pkg[v]) or "None"
+        r[v] = default(pkg[v], "None")
     end
     r.nav = {package="active"}
     r.version = {text=pkg.version}
@@ -164,7 +169,7 @@ end
 
 function model:packageRelations(pkgs)
     local r = {}
-    for k,v in pairs(pkgs) do
+    for _,v in pairs(pkgs) do
         local path = string.format("/package/%s/%s/%s/%s", v.branch, v.repo, v.arch, v.name)
         table.insert(r, {path=path, text=v.name})
     end
@@ -176,7 +181,7 @@ function model:pagerModel(args, pager)
     if pager.last > 1 then
         table.insert(pager, 1, "&laquo;")
         table.insert(pager, "&raquo;")
-        for k,p in ipairs(pager) do
+        for _,p in ipairs(pager) do
             local r = {}
             for g,v in pairs(args) do
                 if (g=="page") then
@@ -189,10 +194,10 @@ function model:pagerModel(args, pager)
                     end
                 end
                 if v ~= "" then
-                    r[#r+1]=string.format("%s=%s", cntrl:urlEncode(g), cntrl:urlEncode(v))
+                    r[#r+1]=string.format("%s=%s", escape_uri(g), escape_uri(v))
                 end
             end
-            path = table.concat(r, '&amp;')
+            local path = table.concat(r, '&amp;')
             class = (args.page == p) and "active" or ""
             table.insert(result, {args=path, class=class, page=p})
         end
