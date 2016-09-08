@@ -24,6 +24,21 @@ function M.escape_uri(str)
         :gsub(' ', '+')
 end
 
+--- Returns a value from (nested) table at the specified path.
+--
+-- @tparam table tab The table to operate on.
+-- @tparam string path A dot separated sequence of fields.
+-- @treturn A value of the last field specified in `path`, or `nil` if some
+--   field doesn't exist in `tab`.
+function M.get(tab, path)
+    local res = tab
+    for field in string.gmatch(path, '[^%.]+') do
+        if res == nil then return nil end
+        res = res[field]
+    end
+    return res
+end
+
 --- Formats email address as "Display Name <address@domain.tld>" or
 -- "address@domain.tld" if `display_name` is empty.
 function M.format_email_addr(display_name, email)

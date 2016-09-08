@@ -6,7 +6,7 @@ This application makes use of the [Turbo](http://turbolua.org) (Lua) framework.
 
 On Alpine Linux it should be enough to install turbo and deps by: 
 
-apk add luajit lua5.1 lua-turbo lua-sqlite lua-lustache lua-socket
+apk add luajit lua5.1 lua-turbo lua-sqlite lua-lustache lua-socket lua-lzmq lua-gversion
 
 Copy config.sample.lua to config.lua and edit it.
 You can start the application by starting ./aports.lua or on Alpine Linux with turbo's init.d (see conf.d/turbo for settings)

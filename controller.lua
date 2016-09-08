@@ -117,7 +117,7 @@ function cntrl:flagMail(args, pkg)
     mail:set_subject(subject)
     local body = lustache:render(self:tpl("mail_body.tpl"), m)
     mail:set_body(body)
-    mail:send()
+    return mail:send()
 end
 
 function cntrl:flagged(args)

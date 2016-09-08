@@ -84,5 +84,25 @@ config.cache.clear = true
 config.cache.path = "/var/lib/nginx/cache"
 -- the max depth to traverse (can be set by nginx cache settings)
 config.cache.depth = 3
+----
+---- settings for anitya (https://release-monitoring.org)
+----
+config.anitya = {}
+-- name of the distribution on anitya
+config.anitya.distro = "Alpine"
+-- base uri of the anitya restful api
+config.anitya.api_uri = "https://release-monitoring.org/api"
+-- number of http requests to send concurrently
+config.anitya.api_concurrency = 20
+-- uri of the anitya fedmsg/zeromq interface
+config.anitya.fedmsg_uri = "tcp://release-monitoring.org:9940"
+-- text of the message to be sent to maintainer of an outdated package
+config.anitya.flag_message = [[
+This package has been flagged automatically on the basis of notification from
+Anitya <https://release-monitoring.org/>.
+
+Please note that integration with Anitya is in experimental phase. If the
+provided information is incorrect, please let us know on IRC or write directly
+to jakub@jirutka.cz. Thanks!]]
 
 return config
