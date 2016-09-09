@@ -43,6 +43,10 @@ function db:formatArgs(args, type)
         r.files.file = args.file
         r.files.path = args.path
         r.files.pkgname = args.name
+    elseif type == "countFlagged" then
+        r.packages.name = args.name
+        r.packages.maintainer = nil
+        r.maintainer = {}
     end
     return r
 end
@@ -227,10 +231,9 @@ function db:getFlagged(args, offset)
     return r
 end
 
--- will not close when not results are found
 function db:countFlagged(args)
     local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
-    local where,bind = self:whereQuery(args, "packages", extra)
+    local where,bind = self:whereQuery(args, "countFlagged", extra)
     local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
