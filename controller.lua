@@ -124,7 +124,7 @@ function cntrl:flagged(args)
     local m = {}
     -- get packages
     local offset = (args.page - 1) * conf.pager.limit
-    local pkgs = db:getFlagged(args, offset)
+    local pkgs, qty = db:getFlagged(args, offset)
     m.pkgs = model:flagged(pkgs)
     local distinct = {
         branch = db:getDistinct("packages", "branch"),
@@ -137,7 +137,6 @@ function cntrl:flagged(args)
     -- navigation menu
     m.nav = {flagged="active"}
     -- create pager
-    local qty = db:countFlagged(args)
     local pager = self:createPager(qty, conf.pager.limit, args.page, conf.pager.offset)
     m.pager = model:pagerModel(args, pager)
     -- render templates

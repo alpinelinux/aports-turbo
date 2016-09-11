@@ -43,10 +43,6 @@ function db:formatArgs(args, type)
         r.files.file = args.file
         r.files.path = args.path
         r.files.pkgname = args.name
-    elseif type == "countFlagged" then
-        r.packages.name = args.name
-        r.packages.maintainer = nil
-        r.maintainer = {}
     end
     return r
 end
@@ -209,37 +205,37 @@ end
 
 function db:getFlagged(args, offset)
     local r = {}
-    local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
+    local extra = "packages.name = packages.origin"
     local where,bind = self:whereQuery(args, "packages", extra)
     local sql = string.format([[
-        SELECT packages.origin, packages.version, packages.branch, packages.repo, flagged.new_version,
-        datetime(flagged.created, 'unixepoch') as created,
-        flagged.message, maintainer.name as mname
-        FROM packages
-        LEFT JOIN flagged ON packages.fid = flagged.fid
-        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
-        %s
-        GROUP BY packages.origin, packages.branch
-        ORDER BY flagged.created DESC LIMIT 50 OFFSET %s
+        WITH pkgs AS (
+            SELECT packages.origin, packages.version, packages.branch, packages.repo,
+                flagged.new_version, datetime(flagged.created, 'unixepoch') as created,
+                flagged.message, maintainer.name as mname, flagged.created as _order
+            FROM packages
+                JOIN flagged ON packages.fid = flagged.fid
+                LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+            %s
+            GROUP BY packages.origin, packages.branch
+        )
+        SELECT *
+        FROM pkgs, (SELECT count(*) as _total FROM pkgs) x
+        ORDER BY _order DESC
+        LIMIT 50 OFFSET %s
     ]], where, offset)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
+
+    local total = 0
     for row in stmt:nrows(sql) do
+        if total == 0 then
+            total = row._total
+        end
         table.insert(r,row)
     end
     stmt:finalize()
-    return r
-end
 
-function db:countFlagged(args)
-    local extra = "packages.name = packages.origin AND packages.fid IS NOT NULL"
-    local where,bind = self:whereQuery(args, "countFlagged", extra)
-    local sql = string.format([[ SELECT count(*) as qty FROM packages %s ]], where)
-    local stmt = self.db:prepare(sql)
-    stmt:bind_names(bind)
-    local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
-    stmt:finalize()
-    return r
+    return r, total
 end
 
 function db:flagOrigin(args, pkg)
