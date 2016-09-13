@@ -102,7 +102,11 @@ function cntrl:flag(pkg, m)
         local m = model:flag(pkg, m)
         m.header = lustache:render(self:tpl("header.tpl"), m)
         m.footer = lustache:render(self:tpl("footer.tpl"), m)
-        return lustache:render(self:tpl("flag.tpl"), m)
+        if pkg.branch == "edge" then
+            return lustache:render(self:tpl("flag.tpl"), m)
+        else
+            return lustache:render(self:tpl("reject_flag.tpl"), m)
+        end
     end
 end
 
