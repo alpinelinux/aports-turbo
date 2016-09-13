@@ -124,8 +124,11 @@ function M.flag_outdated_pkgs(origin_name, new_ver)
         local flag_ver = parse_version(normalize_version(flag_ver_s or ''))
 
         if (not flag_ver or new_ver > flag_ver) and is_outdated(curr_ver, new_ver) then
-            local pkg = db:getPackage { origin = origin_name, version = curr_ver_s }
-
+            local pkg = db:getPackage {
+                origin = origin_name,
+                version = curr_ver_s,
+                branch = 'edge'
+            }
             log.notice(format('Flagging package %s-%s, new version is %s',
                               pkg.origin, pkg.version, new_ver))
 
