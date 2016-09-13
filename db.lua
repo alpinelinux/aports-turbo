@@ -7,11 +7,20 @@ local model     = require('model')
 local db = class('db')
 
 function db:open()
-    self.db = sqlite3.open(conf.db.path)
+    if self.db and self.db:isopen() then
+        return false
+    else
+        self.db = assert(sqlite3.open(conf.db.path))
+        return true
+    end
 end
 
 function db:close()
     self.db:close()
+end
+
+function db:raw_db()
+    return self.db
 end
 
 function db:getDistinct(tbl,col)
