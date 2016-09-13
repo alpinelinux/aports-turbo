@@ -57,7 +57,7 @@ local function handle_map_new(msg)
     local version = get(msg, 'project.version')
 
     if pkgname and version then
-        log.info(("Received version update: %s %s"):format(pkgname, version))
+        log.notice(("Received version update: %s %s"):format(pkgname, version))
         aports.flag_outdated_pkgs(pkgname, version)
     end
 end
@@ -75,7 +75,7 @@ local function handle_version_update(msg)
     local version = get(msg, 'message.upstream_version')
 
     if pkgname and version then
-        log.info(("Received version update: %s %s"):format(pkgname, version))
+        log.notice(("Received version update: %s %s"):format(pkgname, version))
         aports.flag_outdated_pkgs(pkgname, version)
     end
 end
