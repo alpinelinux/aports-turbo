@@ -51,9 +51,10 @@ function mail:set_body(body)
     self.body = body
 end
 
--- send the email, and if failed return the error msg
+-- Send the email and return 1 if successful, otherwise return nil followed by
+-- an error message.
 function mail:send()
-    local r, e = smtp.send{
+    return smtp.send {
         from = self.from,
         rcpt = self.rcpt,
         source = smtp.message({
@@ -63,9 +64,6 @@ function mail:send()
         server = self.server,
         domain = self.domain
     }
-    if not r then
-        return e
-    end
 end
 
 return mail
