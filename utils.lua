@@ -70,7 +70,7 @@ end
 function M.parse_email_addr(addr)
     if not addr then return nil end
 
-    local name, email = addr:match('%s*(.*)%s*<([^>]+)>')
+    local name, email = addr:match('%s*(.-)%s*<([^>]+)>')
     email = email or addr:match('%S+@%S+')
 
     if M.is_valid_email(email) then
