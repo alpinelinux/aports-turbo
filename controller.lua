@@ -24,6 +24,7 @@ function cntrl:packages(args)
         arch = db:getDistinct("packages", "arch"),
         maintainer = db:getDistinct("maintainer", "name"),
     }
+    table.insert(distinct.maintainer, 1, "None")
     -- navigation bar
     m.nav = {package="active"}
     -- create form
@@ -136,6 +137,7 @@ function cntrl:flagged(args)
         arch = db:getDistinct("packages", "arch"),
         maintainer   = db:getDistinct("maintainer", "name"),
     }
+    table.insert(distinct.maintainer, 1, "None")
     -- create form
     m.form = model:flaggedForm(args, distinct)
     -- navigation menu
