@@ -101,8 +101,8 @@ config.anitya.flag_message = [[
 This package has been flagged automatically on the basis of notification from
 Anitya <https://release-monitoring.org/>.
 
-Please note that integration with Anitya is in experimental phase. If the
-provided information is incorrect, please let us know on IRC or write directly
-to jakub@jirutka.cz. Thanks!]]
+Please note that integration with Anitya is in experimental phase.
+If the provided information is incorrect, please let us know on IRC
+or alpine-infra@alpinelinux.org. Thanks!]]
 
 return config
