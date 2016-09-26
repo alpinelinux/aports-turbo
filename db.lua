@@ -64,7 +64,9 @@ function db:whereQuery(args, type, extra)
     local r,bind = {},{}
     for tn,v in pairs(self:formatArgs(args, type)) do
         for fn,v in pairs(v) do
-            if (v ~= "all") and (v  ~= "") then
+            if v == "None" then
+                table.insert(r, string.format("%s.%s IS NULL", tn, fn))
+            elseif (v ~= "all") and (v  ~= "") then
                 local tf = string.format("%s.%s", tn, fn)
                 local tb = string.format("%s_%s", tn, fn)
                 table.insert(r, string.format("%s GLOB :%s", tf, tb))
