@@ -37,10 +37,10 @@
         </div>
         <div id="sitenav">
             <nav>
-                <a href="http://wiki.alpinelinux.org">wiki</a>
+                <a href="https://wiki.alpinelinux.org">wiki</a>
                 <a href="http://git.alpinelinux.org">git</a>
-                <a href="http://bugs.alpinelinux.org/projects/alpine/issues">bugs</a>
-                <a href="http://forum.alpinelinux.org/forum">forums</a>
+                <a href="https://bugs.alpinelinux.org/projects/alpine/issues">bugs</a>
+                <a href="https://forum.alpinelinux.org/forum">forums</a>
             </nav>
         </div>
     </header>{{#alert}}
