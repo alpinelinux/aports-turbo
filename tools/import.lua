@@ -278,6 +278,15 @@ function import:addMaintainer(maintainer)
     end
 end
 
+--- Removes maintainers that don't maintain any package.
+function import:cleanMaintainers()
+    local sql = [[ delete from 'maintainer'
+        where id not in (select maintainer from 'packages') ]]
+    local stmt = self.db:prepare(sql)
+    stmt:step()
+    stmt:finalize()
+end
+
 function import:delPackages(branch, del)
     local sql = [[ delete FROM 'packages' WHERE "branch" = :branch
         AND "repo" = :repo AND "arch" = :arch AND "name" = :name
@@ -376,6 +385,7 @@ function import:run()
                         self.db:exec("begin transaction")
                         self:addPackages(branch, add)
                         self:delPackages(branch, del)
+                        self:cleanMaintainers()
                         self.db:exec("commit")
                         self:updateLocalRepoVersion(branch, repo, arch, version)
                         cntrl:clearCache()
