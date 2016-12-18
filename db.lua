@@ -140,6 +140,7 @@ function db:getDepends(pkg)
         LEFT JOIN provides ON depends.name = provides.name
         LEFT JOIN packages ON provides.pid = packages.id
         WHERE packages.branch = :branch  AND packages.arch = :arch AND depends.pid = :id
+        ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_names(pkg)
@@ -158,6 +159,7 @@ function db:getProvides(pkg)
         LEFT JOIN depends ON provides.name = depends.name
         LEFT JOIN packages ON depends.pid = packages.id
         WHERE packages.branch = :branch  AND packages.arch = :arch AND provides.pid = :id
+        ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_names(pkg)
@@ -173,7 +175,9 @@ end
 function db:getOrigins(pkg)
     local r = {}
     local sql = [[ SELECT DISTINCT packages.* FROM packages
-    WHERE branch = :branch AND repo = :repo AND arch = :arch AND origin = :origin ]]
+        WHERE branch = :branch AND repo = :repo AND arch = :arch AND origin = :origin
+        ORDER BY packages.name
+    ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
