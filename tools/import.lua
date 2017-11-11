@@ -93,6 +93,7 @@ function import:createTables()
     self.db:exec([[ CREATE INDEX IF NOT EXISTS 'packages_name' on 'packages' (name) ]])
     self.db:exec([[ CREATE INDEX IF NOT EXISTS 'packages_maintainer' on 'packages' (maintainer) ]])
     self.db:exec([[ CREATE INDEX IF NOT EXISTS 'packages_build_time' on 'packages' (build_time) ]])
+    self.db:exec([[ CREATE INDEX IF NOT EXISTS 'packages_origin' on 'packages' (origin) ]])
     self.db:exec([[ CREATE TABLE IF NOT EXISTS 'files' (
         'id' INTEGER primary key,
         'file' TEXT,
