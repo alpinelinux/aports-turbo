@@ -220,20 +220,4 @@ function cntrl:tpl(tpl)
     return r
 end
 
-----
--- clear reverse proxy cache
-----
-function cntrl:clearCache()
-    if conf.cache.clear then
-        local p = io.popen(string.format("find '%s' -type f -maxdepth '%s'",
-            conf.cache.path, conf.cache.depth))
-        for file in p:lines() do
-            -- hardcode mandatory base directory
-            if file:match("cache") then
-                os.remove(file)
-            end
-        end
-    end
-end
-
 return cntrl
