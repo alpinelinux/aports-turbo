@@ -166,6 +166,11 @@ function flaggedRenderer:get()
     self:write(cntrl:flagged(args))
 end
 
+function cleanup(loop)
+    turbo.log.notice("Stopping application.")
+    loop:close()
+end
+
 turbo.web.Application({
     {"^/$", turbo.web.RedirectHandler, "/packages"},
     {"^/contents$", contentsRenderer},
@@ -177,4 +182,6 @@ turbo.web.Application({
     {"^/robots.txt", turbo.web.StaticFileHandler, "assets/robots.txt"},
 }):listen(conf.port)
 local loop = turbo.ioloop.instance()
+loop:add_signal_handler(2, cleanup, loop)
+loop:add_signal_handler(15, cleanup, loop)
 loop:start()
