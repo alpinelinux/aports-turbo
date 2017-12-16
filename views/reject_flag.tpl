@@ -9,7 +9,7 @@
                             <div class="panel panel-danger">
                                 <div class="panel-heading">Important please read!</div>
                                 <div class="panel-body">
-                                	<p>You can only flag packages in our edge repository. Flagging stable packages is not allowd. The only valid reasons to upgrade a package is</p>
+                                	<p>You can only flag packages in our edge repository. Flagging stable packages is not allowed. The only valid reasons to upgrade a package is</p>
                                 	<ol>
                                 		<li>A security issue <abbr title="Common Vulnerabilities and Exposures">CVE</abbr> has been found.</li>
                             			<li>A severe bug/issue has been found in the package and a patch has been released to resolve it.</li>
