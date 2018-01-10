@@ -98,13 +98,13 @@ end
 
 local poller = zpoller.new(1)
 poller:add(sock, zmq.POLLIN, function()
-    local payload, err = receive_json_msg(sock)
-    if err then
+    local payload, err2 = receive_json_msg(sock)
+    if err2 then
         log.error('Failed to receive message from fedmsg: '..err)
     end
-    local ok, err = pcall(handlers[payload.topic], payload.msg)
+    local ok, err3 = pcall(handlers[payload.topic], payload.msg)
     if not ok then
-        log.error(err)
+        log.error(err3)
     end
 end)
 

@@ -8,7 +8,7 @@ local format_email_addr = utils.format_email_addr
 --
 -- mail class using lua socket
 --
-local mail = class("mail")
+local mail = {}
 
 function mail:initialize(conf)
     self.server = conf.mail.server

@@ -5,6 +5,7 @@ local config = {}
 config.uri = "http://pkgs.alpinelinux.org"
 ----
 -- Turbo listening port
+-- can be overridden by setting the env var TURBO_PORT
 ----
 config.port = 8080
 ----
@@ -13,6 +14,35 @@ config.port = 8080
 config.branches = {"latest-stable", "edge"}
 config.repos = {"main", "community", "testing"}
 config.archs  = {"x86", "x86_64", "armhf"}
+----
+-- apk-tools index fields
+----
+config.index = {}
+config.index.fields = {
+	P = "name",
+	V = "version",
+	T = "description",
+	U = "url",
+	L = "license",
+	A = "arch",
+	D = "depends",
+	C = "checksum",
+	S = "size",
+	I = "installed_size",
+	p = "provides",
+	i = "install_if",
+	o = "origin",
+	m = "maintainer",
+	t = "build_time",
+	c = "commit",
+	k = "provider_priority"
+}
+----
+-- default settings
+----
+config.default = {}
+config.default.branch = "edge"
+config.default.arch = "x86_64"
 ----
 -- location of the mirror on disk
 ----
@@ -24,24 +54,27 @@ config.db = {}
 -- initialize database (create tables)
 config.db.init = false
 -- path to the sqlite db
-config.db.path = "db/aports.db"
+config.db.path = "db"
 -- multi value db fields
 config.db.fields = {"provides", "depends", "install_if"}
+-- debug. print sql queries on console
+config.db.debug = true
 ----
--- debug logging. true to enable to stdout, syslog to syslog
+-- debug logging. true to enable to stdout.
 ----
 config.logging = true
 ----
 -- google recaptcha settings
 ----
 config.rc = {}
--- set sitekey to false to disable recaptcha
--- config.rc.sitekey = ""
+config.rc.enabled = false
+config.rc.sitekey = ""
 config.rc.secret  = ""
 ----
 -- mailer settings
 ----
 config.mail = {}
+config.mail.enable = false
 config.mail.from = "Alpine Package DB <pkgs@alpinelinux.org>"
 config.mail.server = "mail.alpinelinux.org"
 config.mail.domain = "pkgs.alpinelinux.org"

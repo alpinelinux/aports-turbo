@@ -65,6 +65,7 @@
                         <td class="package">
                             <a data-toggle="tooltip" title="{{name.title}}" href="{{name.path}}">{{name.text}}</a>
                         </td>
+                        {{#default}}
                         {{#flagged}}
                         <td class="version">
                             <strong>
@@ -79,6 +80,10 @@
                             </strong>
                         </td>
                         {{/flagged}}
+                        {{/default}}
+                        {{^default}}
+                        <td class="version">{{version.text}}</td>
+                        {{/default}}
                         <td class="url"><a href="{{url.path}}">{{url.text}}</a></td>
                         <td class="license">{{license}}</td>
                         <td class="branch">{{branch}}</td>

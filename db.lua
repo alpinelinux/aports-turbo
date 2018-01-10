@@ -1,31 +1,48 @@
 local sqlite3   = require('lsqlite3')
 
 local conf      = require('config')
-local model     = require('model')
+local utils     = require("utils")
 
-
-local db = class('db')
+local db = {}
 
 function db:open()
-    if self.db and self.db:isopen() then
-        return false
-    else
-        self.db = assert(sqlite3.open(conf.db.path))
-        return true
+    self.dbs = {}
+    for _,branch in pairs(conf.branches) do
+        local db_filename = ("aports-%s.db"):format(branch)
+        local db_path = ("%s/%s"):format(conf.db.path, db_filename)
+        self.dbs[branch] = sqlite3.open(db_path)
     end
 end
 
-function db:close()
-    self.db:close()
+function db:select(branch)
+    branch = utils.in_table(branch, conf.branches) and branch or conf.default.branch
+    self.db = self.dbs[branch]
 end
 
-function db:raw_db()
-    return self.db
+function db:close()
+    for _,dbh in pairs(self.dbs) do
+        if dbh:isopen() then dbh:close() end
+    end
+end
+
+function db:debug(fname, sql)
+    if conf.db.debug == true then
+        print(("Function: %s \nDatabase error: %s \nSQL Query:\n%s"):format(
+            fname, self.db:errmsg(), sql))
+    end
+end
+
+function db.raw_db(branch)
+    local db_filename = ("aports-%s.db"):format(branch)
+    local db_path = ("%s/%s"):format(conf.db.path, db_filename)
+    local dbh = sqlite3.open(db_path)
+    return dbh
 end
 
 function db:getDistinct(tbl,col)
     local r = {}
     local sql = string.format("SELECT DISTINCT %s from %s", col, tbl)
+    self:debug("getDistinct", sql)
     for row in self.db:urows(sql) do
         table.insert(r,row)
     end
@@ -36,14 +53,14 @@ end
 -- format database where arguments
 -- by default we only set fields for packages table
 -- type will set specific tables and arguments
-function db:formatArgs(args, type)
+local function format_args(args, type)
     local r = {}
     r.packages = {}
-    for _,v in pairs(model:packageFormat()) do
+    for _,v in pairs(conf.index.fields) do
         r.packages[v] = args[v]
     end
     if type == "packages" then
-        r.packages.name = args.name
+        r.packages.repo = args.repo
         r.packages.maintainer = nil
         r.maintainer = {}
         r.maintainer.name = args.maintainer
@@ -51,7 +68,6 @@ function db:formatArgs(args, type)
         r.files = {}
         r.files.file = args.file
         r.files.path = args.path
-        r.files.pkgname = args.name
     end
     return r
 end
@@ -60,17 +76,18 @@ end
 -- exclude all queries and page arguments
 -- create a glob
 ----
-function db:whereQuery(args, type, extra)
+local function where_query(args, type, extra)
+    args = utils.copy_table(args, {"branch"})
     local r,bind = {},{}
-    for tn,v in pairs(self:formatArgs(args, type)) do
-        for fn,v in pairs(v) do
-            if v == "None" then
-                table.insert(r, string.format("%s.%s IS NULL", tn, fn))
-            elseif (v ~= "all") and (v  ~= "") then
-                local tf = string.format("%s.%s", tn, fn)
-                local tb = string.format("%s_%s", tn, fn)
-                table.insert(r, string.format("%s GLOB :%s", tf, tb))
-                bind[tb] = v
+    for tn,v in pairs(format_args(args, type)) do
+        for fn,w in pairs(v) do
+            if w == "None" then
+                table.insert(r, ("%s.%s IS NULL"):format(tn, fn))
+            elseif (w ~= "all") and (w  ~= "") then
+                local tf = ("%s.%s"):format(tn, fn)
+                local tb = ("%s_%s"):format(tn, fn)
+                table.insert(r, ("%s GLOB :%s"):format(tf, tb))
+                bind[tb] = w
             end
         end
     end
@@ -79,19 +96,34 @@ function db:whereQuery(args, type, extra)
     return query,bind
 end
 
-
 function db:getPackages(args, offset)
-    local where,bind = self:whereQuery(args, "packages")
+    local where,bind = where_query(args, "packages")
     local r = {}
-    local sql = string.format([[
+    local sql1 = string.format([[
         SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
         maintainer.name as mname, maintainer.email as memail,
-        datetime(flagged.created, 'unixepoch') as flagged FROM packages
+        datetime(flagged.created, 'unixepoch') as flagged
+        FROM packages
         LEFT JOIN maintainer ON packages.maintainer = maintainer.id
-        LEFT JOIN flagged ON packages.fid = flagged.fid
+        LEFT JOIN flagged ON packages.origin = flagged.origin AND
+        packages.version = flagged.version AND packages.repo = flagged.repo
         %s
-        ORDER BY packages.build_time DESC LIMIT 50 OFFSET %s]], where, offset)
+        ORDER BY packages.build_time DESC
+        LIMIT 50 OFFSET %s
+    ]], where, offset)
+    local sql2 = string.format([[
+        SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
+        maintainer.name as mname, maintainer.email as memail
+        FROM packages
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        %s
+        ORDER BY packages.build_time DESC
+        LIMIT 50 OFFSET %s
+    ]], where, offset)
+    -- only get flagged status for default branch
+    local sql = (args.branch == conf.default.branch) and sql1 or sql2
     local stmt = self.db:prepare(sql)
+    self:debug("getPackages", sql)
     stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
         table.insert(r, row)
@@ -101,51 +133,63 @@ function db:getPackages(args, offset)
 end
 
 function db:countPackages(args)
-    local where,bind = self:whereQuery(args, "packages")
-    local sql = string.format([[ SELECT count(*) as qty FROM packages
+    local where,bind = where_query(args, "packages")
+    local sql = string.format([[
+        SELECT count(*) as qty FROM packages
         LEFT JOIN maintainer ON packages.maintainer = maintainer.id
-        %s ]], where)
+        %s
+    ]], where)
     local stmt = self.db:prepare(sql)
+    self:debug("countPackages", sql)
     stmt:bind_names(bind)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
     stmt:finalize()
     return r
 end
 
-function db:getPackage(args)
-    -- temp fix for exact lookup of pacakge
-    args.exact = "on"
-    local where,bind = self:whereQuery(args, "packages")
-    local sql = string.format([[
+function db:getPackage(branch, repo, arch, pkgname)
+    local sql1 = [[
         SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
         maintainer.name as mname, maintainer.email as memail,
-        datetime(flagged.created, 'unixepoch') as flagged FROM packages
+        datetime(flagged.created, 'unixepoch') as flagged
+        FROM packages
         LEFT JOIN maintainer ON packages.maintainer = maintainer.id
-        LEFT JOIN flagged ON packages.fid = flagged.fid
-        %s ]], where)
+        LEFT JOIN flagged ON packages.origin = flagged.origin AND
+        packages.version = flagged.version AND packages.repo = flagged.repo
+        WHERE packages.repo = :repo AND packages.arch = :arch AND packages.name = :pkgname
+    ]]
+    local sql2 = [[
+        SELECT packages.*, datetime(packages.build_time, 'unixepoch') as build_time,
+        maintainer.name as mname, maintainer.email as memail
+        FROM packages
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        WHERE packages.repo = :repo AND packages.arch = :arch AND packages.name = :pkgname
+    ]]
+    -- only get flagged status for default branch
+    local sql = (branch == conf.default.branch) and sql1 or sql2
     local stmt = self.db:prepare(sql)
-    stmt:bind_names(bind)
+    self:debug("getPackage", sql)
+    stmt:bind_values(repo, arch, pkgname)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_named_values() or {}
     stmt:finalize()
     return r
 end
 
-----
--- these queries are very similar. maybe simplefy/merge them.
-----
-
 function db:getDepends(pkg)
     local r = {}
-    local sql = [[ SELECT DISTINCT packages.* FROM depends
+    local sql = [[
+        SELECT DISTINCT packages.* FROM depends
         LEFT JOIN provides ON depends.name = provides.name
         LEFT JOIN packages ON provides.pid = packages.id
-        WHERE packages.branch = :branch  AND packages.arch = :arch AND depends.pid = :id
+        WHERE packages.arch = :arch AND depends.pid = :id
         ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
+    self:debug("getDepends", sql)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
         if row.name ~= pkg.name then
+            row.branch = pkg.branch
             table.insert(r,row)
         end
     end
@@ -155,16 +199,19 @@ end
 
 function db:getProvides(pkg)
     local r = {}
-    local sql = [[ SELECT DISTINCT packages.* FROM provides
+    local sql = [[
+        SELECT DISTINCT packages.* FROM provides
         LEFT JOIN depends ON provides.name = depends.name
         LEFT JOIN packages ON depends.pid = packages.id
-        WHERE packages.branch = :branch  AND packages.arch = :arch AND provides.pid = :id
+        WHERE packages.arch = :arch AND provides.pid = :id
         ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
+    self:debug("getProvides", sql)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
         if row.name ~= pkg.name then
+            row.branch = pkg.branch
             table.insert(r,row)
         end
     end
@@ -174,14 +221,17 @@ end
 
 function db:getOrigins(pkg)
     local r = {}
-    local sql = [[ SELECT DISTINCT packages.* FROM packages
-        WHERE branch = :branch AND repo = :repo AND arch = :arch AND origin = :origin
+    local sql = [[
+        SELECT DISTINCT packages.* FROM packages
+        WHERE repo = :repo AND arch = :arch AND origin = :origin
         ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
+    self:debug("getOrigins", sql)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
         if row.name ~= pkg.name then
+            row.branch = pkg.branch
             table.insert(r,row)
         end
     end
@@ -191,13 +241,15 @@ end
 
 function db:getContents(args, offset)
     local r = {}
-    local where,bind = self:whereQuery(args, "contents")
+    local where,bind = where_query(args, "contents")
     local sql = string.format([[
-        SELECT files.*, packages.branch, packages.repo,
-        packages.arch, packages.name FROM files
-        LEFT JOIN packages ON files.pid = packages.id
+        SELECT packages.repo, packages.arch, packages.name, files.*
+        FROM packages
+        JOIN files ON files.pid = packages.id
         %s
-        ORDER BY files.id DESC LIMIT 50 OFFSET %s ]], where, offset)
+        LIMIT 50 OFFSET %s
+    ]], where, offset)
+    self:debug("getContents", sql)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
@@ -208,72 +260,121 @@ function db:getContents(args, offset)
 end
 
 function db:countContents(args)
-    local where,bind = self:whereQuery(args, "contents")
-    local sql = string.format([[ SELECT count(file) as qty FROM files
-    LEFT JOIN packages ON files.pid = packages.id %s]], where)
+    local where,bind = where_query(args, "contents")
+    local sql = string.format([[
+        SELECT count(packages.id)
+        FROM packages
+        JOIN files ON files.pid = packages.id
+        %s
+    ]], where)
     local stmt = self.db:prepare(sql)
+    self:debug("countContents", sql)
     stmt:bind_names(bind)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
     stmt:finalize()
     return r
 end
 
-function db:getFlagged(args, offset)
-    local r = {}
-    local extra = "packages.name = packages.origin"
-    local where,bind = self:whereQuery(args, "packages", extra)
-    local sql = string.format([[
-        WITH pkgs AS (
-            SELECT packages.origin, packages.version, packages.branch, packages.repo,
-                flagged.new_version, datetime(flagged.created, 'unixepoch') as created,
-                flagged.message, maintainer.name as mname, flagged.created as _order
-            FROM packages
-                JOIN flagged ON packages.fid = flagged.fid
-                LEFT JOIN maintainer ON packages.maintainer = maintainer.id
-            %s
-            GROUP BY packages.origin, packages.branch
-        )
-        SELECT *
-        FROM pkgs, (SELECT count(*) as _total FROM pkgs) x
-        ORDER BY _order DESC
-        LIMIT 50 OFFSET %s
-    ]], where, offset)
-    local stmt = self.db:prepare(sql)
-    stmt:bind_names(bind)
+local function get_offset(rows, row, offset, cnt)
+    if cnt >= offset and cnt <= (offset+50-1) then
+        table.insert(rows, row)
+    end
+    return cnt+1
+end
 
-    local total = 0
+function db:getFlagged(args, offset)
+    local r, cnt = {}, 0
+    local extra = "packages.name = packages.origin AND flagged.updated IS NULL"
+    local where,bind = where_query(args, "packages", extra)
+    local sql = string.format([[
+        SELECT packages.origin, packages.version, packages.repo,
+        maintainer.name as mname, flagged.new_version, flagged.message,
+        datetime(flagged.created, 'unixepoch') as created
+        FROM flagged
+        LEFT JOIN packages ON packages.origin = flagged.origin AND
+        packages.version = flagged.version AND packages.repo = flagged.repo
+        LEFT JOIN maintainer ON packages.maintainer = maintainer.id
+        %s
+        GROUP BY packages.origin
+        ORDER BY flagged.created DESC
+    ]], where)
+    local stmt = self.db:prepare(sql)
+    self:debug("getFlagged", sql)
+    stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
-        if total == 0 then
-            total = row._total
-        end
-        table.insert(r,row)
+        cnt = get_offset(r, row, offset, cnt)
     end
     stmt:finalize()
+    return r, cnt
+end
 
-    return r, total
+function db:isFlagged(origin, repo, version)
+    local sql = [[
+        SELECT 1 FROM flagged
+        WHERE origin = :origin AND repo = :repo AND version = :version
+        LIMIT 1
+    ]]
+    local stmt = self.db:prepare(sql)
+    self:debug("isFlagged", sql)
+    stmt:bind_values(origin, repo, version)
+    local r = (stmt:step()==sqlite3.ROW) and true or false
+    stmt:finalize()
+    return r
+end
+
+function db:isOrigin(repo, origin, version)
+    local sql = [[
+        SELECT 1 from packages
+        WHERE repo = :repo AND origin = :origin AND version = :version
+        LIMIT 1
+    ]]
+    local stmt = self.db:prepare(sql)
+    self:debug("isOrigin", sql)
+    stmt:bind_values(repo, origin, version)
+    local r = (stmt:step()==sqlite3.ROW) and true or false
+    stmt:finalize()
+    return r
+end
+
+function db:getMaintainer(origin)
+    local res = {}
+    local sql = [[
+        SELECT maintainer.*
+        FROM maintainer
+        JOIN packages ON maintainer.id = packages.maintainer
+        WHERE origin = :origin
+        GROUP BY origin
+    ]]
+    local stmt = self.db:prepare(sql)
+    self:debug("getMaintainer", sql)
+    stmt:bind_values(origin)
+    if stmt:step() == sqlite3.ROW then
+        res = stmt:get_named_values()
+    end
+    stmt:finalize()
+    if next(res) then return res end
 end
 
 function db:flagOrigin(args, pkg)
-    local sql = [[ INSERT INTO flagged (created, reporter, new_version, message)
-        VALUES (strftime('%s', 'now'), :from, :new_version, :message)]]
-    self.db:exec("BEGIN")
+    local res = false
+    self:select(conf.default.branch)
+    args.origin = pkg.origin
+    args.version = pkg.version
+    args.repo = pkg.repo
+    local sql = [[
+        INSERT INTO flagged (
+            origin, version, repo, created, reporter, new_version, message
+        )
+        VALUES (
+            :origin, :version, :repo, strftime('%s', 'now'), :from,
+            :new_version, :message
+        )
+    ]]
     local stmt = self.db:prepare(sql)
     stmt:bind_names(args)
-    stmt:step()
-    local fid = stmt:last_insert_rowid()
+    if stmt:step() == sqlite3.DONE then res = true end
     stmt:finalize()
-    if fid then
-        self.db:exec(
-            string.format([[
-                UPDATE packages SET fid = '%s'
-                WHERE branch = '%s' AND repo = '%s' AND origin = '%s'
-                AND version = '%s' ]], fid, pkg.branch, pkg.repo, pkg.origin,
-                pkg.version
-            )
-        )
-        self.db:exec("COMMIT")
-        return fid
-    end
+    return res
 end
 
 return db

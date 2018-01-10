@@ -78,4 +78,38 @@ function M.parse_email_addr(addr)
     end
 end
 
+function M.in_table(e, t)
+    for _,v in pairs(t) do
+        if (v==e) then return true end
+    end
+    return false
+end
+
+---
+-- copy table to a new table and optional filter keys
+function M.copy_table(tbl, fk)
+    local res = {}
+    for k,v in pairs(tbl) do
+        if type(fk) == "table" and not M.in_table(k, fk) then
+            res[k] = v
+        end
+    end
+    return res
+end
+
+function M.file_exists(path)
+    local f = io.open(path, "r")
+    if f ~= nil then
+        io.close(f)
+        return true
+    end
+    return false
+end
+
+function M.split(s,d)
+    local r = {}
+    for i in s:gmatch(d) do table.insert(r,i) end
+    return r
+end
+
 return M

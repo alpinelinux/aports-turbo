@@ -12,6 +12,7 @@ local cntrl    = require 'controller'
 local format = string.format
 local normalize_version = gversion.normalize
 local parse_version = gversion.parse
+local branch = conf.default.branch
 
 local pre_suffixes = {'alpha', 'beta', 'pre', 'rc'}
 gversion.set_suffixes(pre_suffixes, {'cvs', 'svn', 'git', 'hg', 'p'})
@@ -27,11 +28,14 @@ local function flag_package(pkg, new_version)
         new_version = new_version,
         message = conf.anitya.flag_message
     }
+    db:open()
     assert(db:flagOrigin(flag_fields, pkg),
-           'Failed to flag package: '..pkg.origin)
-
-    assert(cntrl:flagMail(flag_fields, pkg))
+        'Failed to flag package: '..pkg.origin)
+    assert(cntrl:flagMail(flag_fields, pkg),
+        'Failed to send email for package: '..pkg.origin)
+    db:close()
 end
+
 
 --- Compares the current version with new version and returns true if the
 -- current version is outdated.
@@ -67,22 +71,18 @@ local M = {}
 
 --- Yields names of aports (i.e. origin packages) in the specified branch.
 -- If the database is not opened, then it opens it and close after finish.
-function M.each_aport_name(branch)
-    local close_db = db:open()
-
-    local stmt = db:raw_db():prepare [[
+function M.each_aport_name()
+    local ldb = db.raw_db(branch)
+    local sql = [[
         SELECT DISTINCT origin
         FROM packages
-        WHERE branch = ?
     ]]
-    stmt:bind_values(branch)
 
     return coroutine.wrap(function()
-        for name in stmt:urows() do
+        for name in ldb:urows(sql) do
             coroutine.yield(name)
         end
-        stmt:finalize()
-        if close_db then db:close() end
+        if ldb:isopen() then ldb:close() end
     end)
 end
 
@@ -99,36 +99,44 @@ end
 function M.flag_outdated_pkgs(origin_name, new_ver)
     new_ver = assert(parse_version(normalize_version(new_ver)),
                      'Malformed new version: '..new_ver)
-
-    local close_db = db:open()
-    local stmt = db:raw_db():prepare [[
+    local ldb = db.raw_db(branch)
+    local stmt1 = ldb:prepare [[
         SELECT DISTINCT p.version, f.new_version
         FROM packages p
-            LEFT JOIN flagged f ON f.fid = p.fid
-        WHERE p.origin = ? AND p.branch = ?
+        LEFT JOIN flagged f
+        ON p.repo = f.repo AND p.origin = f.origin AND p.version = f.version
+        WHERE p.origin = ?
     ]]
-    stmt:bind_values(origin_name, 'edge')
+    stmt1:bind_values(origin_name)
 
     local finalize = function()
-        stmt:finalize()
-        if close_db then db:close() end
+        if ldb:isopen() then ldb:close() end
     end
 
-    for curr_ver_s, flag_ver_s in stmt:urows() do
-        local curr_ver = parse_version(curr_ver_s)
+    local rows = {}
+    for row in stmt1:nrows() do
+        table.insert(rows, row)
+    end
+    stmt1:finalize()
+
+    for _,v in ipairs(rows) do
+        local curr_ver = parse_version(v.version)
         if not curr_ver then
             finalize()
-            error('Malformed current version: '..curr_ver_s)
+            error('Malformed current version: '..v.version)
         end
 
-        local flag_ver = parse_version(normalize_version(flag_ver_s or ''))
-
+        local flag_ver = parse_version(normalize_version(v.new_version or ''))
         if (not flag_ver or new_ver > flag_ver) and is_outdated(curr_ver, new_ver) then
-            local pkg = db:getPackage {
-                origin = origin_name,
-                version = curr_ver_s,
-                branch = 'edge'
-            }
+            local stmt2 = ldb:prepare [[
+                SELECT DISTINCT origin, version, repo
+                FROM packages p
+                WHERE p.origin = :origin
+                AND p.version = :version
+            ]]
+            stmt2:bind_values(origin_name, v.version)
+            local pkg = (stmt2:step() == 100) and stmt2:get_named_values() or {}
+            stmt2:finalize()
             log.notice(format('Flagging package %s-%s, new version is %s',
                               pkg.origin, pkg.version, new_ver))
 
@@ -139,7 +147,6 @@ function M.flag_outdated_pkgs(origin_name, new_ver)
             end
         end
     end
-
     finalize()
 end
 

@@ -41,7 +41,6 @@
                                             <tr><th>Origin name</th><td>{{origin}}</td></tr>
                                             <tr><th>Repository</th><td>{{repo}}</td></tr>
                                             <tr><th>Version</th><td>{{version}}</td></tr>
-                                            <tr><th>Maintainer</th><td>{{maintainer}}</td></tr>
                                         </tbody>
                                     </table>
                                     <div class="alert alert-warning" role="alert">Flagging a package out of date will always select the orgin package. This means if you have selected another package to flag this is most probably a subpackage of ({{origin}})</div>
