@@ -18,13 +18,6 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <select name="branch" data-placeholder="Branch" class="form-control chosen-select" id="branch" >
-                        {{#form.branch}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.branch}}
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <select name="repo" data-placeholder="Repository" class="form-control chosen-select" id="repo">
                         {{#form.repo}}
                             <option {{{selected}}} >{{text}}</option>
@@ -47,7 +40,6 @@
                         <th>Origin</th>
                         <th>Version</th>
                         <th>New version</th>
-                        <th>Branch</th>
                         <th>Repository</th>
                         <th>Maintainer</th>
                         <th>Flag date</th>
@@ -60,8 +52,7 @@
                         </td>
                         <td class="version text-danger"><strong>{{version}}</strong></td>
                         <td class="new_version">{{new_version}}</td>
-                        <td class="branch">{{branch}}</td>
-                        <td class="branch">{{repo}}</td>
+                        <td class="repo">{{repo}}</td>
                         <td class="maintainer">{{maintainer}}</td>
                         <td class="created">{{created}}</td>
                         <td class="message text-center">

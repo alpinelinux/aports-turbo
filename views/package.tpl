@@ -24,9 +24,14 @@
                                             <tr>
                                                 <th class="text-nowrap">Version</th>
                                                 <td>
+                                                    {{#pkg.flaggable}}
                                                     <strong>
                                                         <a data-toggle="tooltip" title="{{pkg.version.title}}" class="{{pkg.version.class}}" href="{{pkg.version.path}}">{{pkg.version.text}}</a>
                                                     <strong>
+                                                    {{/pkg.flaggable}}
+                                                    {{^pkg.flaggable}}
+                                                        {{pkg.version.text}}
+                                                    {{/pkg.flaggable}}
                                                 </td>
                                             </tr>
                                             <tr>

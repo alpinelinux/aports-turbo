@@ -52,7 +52,7 @@ end
 
 log.notice 'Checking outdated packages using Anitya...'
 
-cc.foreach(aports.each_aport_name('edge'), function(pkgname)
+cc.foreach(aports.each_aport_name(), function(pkgname)
     local proj = fetch_distro_pkg(pkgname)
 
     if proj and proj.version then
