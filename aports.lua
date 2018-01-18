@@ -88,18 +88,15 @@ function flagRenderer:post(repo, origin, version)
         error(turbo.web.HTTPError(404, "404 Page not found."))
     -- check if email is valid
     elseif not is_valid_email(args.from) then
-        m.form.status = {from="has-error"}
-        m.alert = {type="danger",msg="Please provide a valid email address"}
+        m.form.from = {class="input-error"}
         self:write(cntrl.flag(pkg, m))
     -- check if new version is provided
     elseif args.new_version == "" then
-        m.form.status = {new_version="has-error"}
-        m.alert = {type="danger",msg="Please provide a new upstream version number"}
+        m.form.version = {class="input-error"}
         self:write(cntrl.flag(pkg, m))
     -- check if message is provided
     elseif args.message == "" then
-        m.form.status = {message="has-error"}
-        m.alert = {type="danger",msg="Please provide a message"}
+        m.form.message = {class="input-error"}
         self:write(cntrl.flag(pkg, m))
     -- check if recaptcha is correct
     elseif conf.rc.sitekey and not cntrl.verifyRecaptcha(args.responce) then

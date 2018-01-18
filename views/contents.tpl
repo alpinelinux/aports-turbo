@@ -1,91 +1,89 @@
 {{{header}}}
-    <script>
-        $(document).ready(function(){
-            $('[data-toggle="tooltip"]').tooltip({container: 'html'});
-            $('.chosen-select').chosen({allow_single_deselect: true});
-        });
-    </script>
-    <div id="main">
-        <div class="panel panel-default">
-            <div class="panel-heading">Search the contents of packages</div>
-            <div class="panel-body">
-                <form role="form" id="search" class="form-inline">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="file" name="file" value="{{form.file}}" placeholder="File" autofocus>
-                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
-                        </div>
+        <main id="contents">
+            <div class="grid-head">Contents filter</div>
+            <div class="grid-body" id="search-form">
+                <div class="pure-g">
+                    <div class="pure-u-1">
+                        <form class="pure-form pure-form-stacked">
+                            <div class="pure-g">
+                                <div class="pure-u-1 pure-u-md-4-24 form-field hint--top" aria-label="Use * and ? as wildcards">
+                                        <input class="pure-input-1" type="text" id="file" name="file" value="{{form.file}}" placeholder="File" autofocus>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-4-24 form-field hint--top" aria-label="Use * and ? as wildcards">
+                                        <input class="pure-input-1" type="text" id="path" name="path" value="{{form.path}}" placeholder="Path">
+                                </div>
+                                <div class="pure-u-1 pure-u-md-4-24 form-field hint--top" aria-label="Use * and ? as wildcards">
+                                        <input class="pure-input-1" type="text" id="name" name="name" value="{{form.name}}" placeholder="Package">
+                                </div>
+                                <div class="pure-u-1 pure-u-md-2-24 form-field">
+                                    <select class="pure-input-1" name="branch" id="branch">
+                                        <option value="" disabled {{form.placeholder.branch}}>Branch</option>
+                                    {{#form.branch}}
+                                        <option {{{selected}}}>{{text}}</option>
+                                    {{/form.branch}}
+                                    </select>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-2-24 form-field">
+                                    <select class="pure-input-1" name="repo" id="repo">
+                                        <option value="" disabled {{form.placeholder.repo}}>Repository</option>
+                                    {{#form.repo}}
+                                        <option {{{selected}}}>{{text}}</option>
+                                    {{/form.repo}}
+                                    </select>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-2-24 form-field">
+                                    <select class="pure-input-1" name="arch" id="arch">
+                                        <option value="" disabled {{form.placeholder.arch}}>Arch</option>
+                                    {{#form.arch}}
+                                        <option {{{selected}}}>{{text}}</option>
+                                    {{/form.arch}}
+                                    </select>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-3-24 form-button">
+                                    <button type="submit" class="pure-button pure-button-primary">Search</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="path" name="path" value="{{form.path}}" placeholder="Path">
-                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="name" name="name" value="{{form.name}}" placeholder="Package">
-                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <select name="branch" data-placeholder="Branch" class="form-control chosen-select" id="branch" >
-                        {{#form.branch}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.branch}}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <select name="repo" data-placeholder="Repo" class="form-control chosen-select" id="repo">
-                        {{#form.repo}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.repo}}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <select name="arch" data-placeholder="Arch" class="form-control chosen-select" id="arch">
-                        {{#form.arch}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.arch}}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </form>
+                </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-striped table-bordered table-condensed" data-toggle="table">
-                    <tr>
-                        <th>File</th>
-                        <th>Package</th>
-                        <th>Branch</th>
-                        <th>Repository</th>
-                        <th>Architecture</th>
-                    </tr>
-                    {{#contents}}
-                    <tr>
-                        <td>{{file}}</td>
-                        <td><a href="{{pkgname.path}}">{{pkgname.text}}</a></td>
-                        <td>{{branch}}</td>
-                        <td>{{repo}}</td>
-                        <td>{{arch}}</td>
-                    </tr>
-                    {{/contents}}
-                    {{^contents}}
-                    <tr>
-                        <td colspan="4">No item found...</td>
-                    </tr>
-                    {{/contents}}
+                <table class="pure-table pure-table-striped">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Package</th>
+                            <th>Branch</th>
+                            <th>Repository</th>
+                            <th>Architecture</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#contents}}
+                        <tr>
+                            <td>{{file}}</td>
+                            <td><a href="{{pkgname.path}}">{{pkgname.text}}</a></td>
+                            <td>{{branch}}</td>
+                            <td>{{repo}}</td>
+                            <td>{{arch}}</td>
+                        </tr>
+                        {{/contents}}
+                        {{^contents}}
+                        <tr>
+                            <td colspan="5">No item found...</td>
+                        </tr>
+                        {{/contents}}
+                    </tbody>
                 </table>
             </div>
-            <div class="panel-footer text-center">
+            <div class="pure-menu pure-menu-horizontal" id="pagination">
                 <nav>
-                    <ul class="pagination">
+                    <ul class="pure-menu-list">
                     {{#pager}}
-                    <li class="{{{class}}}"><a href="/contents?{{{args}}}">{{{page}}}</a></li>
+                    <li class="pure-menu-item {{{class}}}"><a class="pure-menu-link" href="/contents?{{{args}}}">{{{page}}}</a></li>
                     {{/pager}}
                     </ul>
                 </nav>
             </div>
-        </div>
-    </div>
+        </main>
 {{{footer}}}

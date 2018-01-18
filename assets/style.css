@@ -1,92 +1,411 @@
-html {
-    height: 100%;
-}
+/* global styles */
 
 html, body {
-    overflow-x: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    color: #526066;
+}
+
+h1, h2, h3 {
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: black;
+}
+
+h1 { font-size: 1.5em }
+h2 { font-size: 1em }
+h3 { font-size: 0.8em }
+
+p {
+    line-height: 1.6em;
+    padding-top: 0.2em;
+    padding-bottom: 0.2em;
+}
+
+a {
+    text-decoration: none;
+    color: rgb(61, 146, 201);
+}
+
+#wrapper {
+    min-height: 100%;
+    position: relative;
+}
+
+.text-success {
+    color: #3c763d;
+}
+
+.text-danger {
+    color: #a94442;
+}
+
+.text-warning {
+    color: #8a6d3b;
+}
+
+.text-secondary {
+    color: rgb(66, 184, 221);
+}
+
+.grid-head {
+    background-color: #e0e0e0;
+    padding: 0.5em 1em;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.grid-body {
+    padding: 2em;
+    border: 1px solid #cbcbcb;
+    border-top: 0;
+    margin-bottom: 2em;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* header settings */
+
+header {
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    border-bottom: 1px solid #ccc;
+}
+
+header .logo {
+    padding:1em;
+}
+
+header .menu-local {
+    position: absolute;
+    bottom: 0;
+}
+
+header .menu-external {
+    text-align: right;
+    font-style: italic;
+}
+
+header .box-relative {
+    position: relative;
+}
+
+/* hamburger menu */
+
+body {
+    /* fix for android */
+    -webkit-animation: bugfix infinite 1s;
+}
+
+@-webkit-keyframes bugfix {
+    from { padding: 0; }
+    to { padding: 0; }
+}
+
+#menu-toggle-cb {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+}
+
+#menu-toggle {
+    cursor: pointer;
+    user-select: none;
+    width: 38px;
+    height: 36px;
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: none;
+}
+
+#menu-toggle .bar {
+    background-color: #777;
+    display: block;
+    width: 24px;
+    height: 4px;
+    border-radius: 100px;
+    position: absolute;
+    top: 16px;
+    right: 7px;
+}
+
+#menu-toggle .bar:first-child {
+    top: 8px;
+}
+
+#menu-toggle .bar:last-child {
+    top: 24px;
+}
+
+/* Make the hamburger menu do visual magic */
+
+#menu-toggle-cb:checked ~ #menu-toggle .bar:first-child {
+    -webkit-transform: rotate(-45deg);
+    -moz-transform: rotate(-45deg);
+    -ms-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+}
+
+#menu-toggle-cb:checked ~ #menu-toggle .bar:last-child {
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+}
+
+#menu-toggle-cb:checked ~ #menu-toggle .bar:nth-child(odd) {
+    top: 16px;
+}
+
+#menu-toggle-cb:checked ~ #menu-toggle .bar:nth-child(even) {
+    display: none;
+}
+
+/*
+ * form styling
+ */
+
+.input-error label,
+.input-error .pure-form-message {
+    color: #a94442;
+}
+
+.input-error input[type=email],
+.input-error input[type=text],
+.input-error textarea {
+    border: 1px solid #a94442;
+    background-color: #f2dede;
+}
+
+/* Main */
+
+main {
+    margin: 0 auto;
+    padding: 0em 1em 2em 1em;
+    max-width: 1600px;
+    padding: 2em;
+    padding-bottom: 5em;
+}
+
+/*
+ *  main tables
+ */
+
+main#packages table,
+main#contents table,
+main#flagged table,
+main#package table,
+main#flag table {
+    width: 100%;
+}
+
+th.header {
+    text-align: left;
+    background-color: #e0e0e0;
+    color: #000;
+    border-bottom: 1px solid #cbcbcb;
+    white-space: nowrap;
+}
+
+/* search form */
+
+main #search-form {
+    padding: 1em;
+}
+
+main #search-form .form-field {
+    padding-right: 0.5em;
+}
+
+main #search-form .form-button {
+    padding-top: 0.3em;
+}
+
+/* package listing */
+
+main#package .multi-fields details {
+    cursor: pointer;
+}
+
+main#package .multi-fields details summary {
+    border: 1px solid #cbcbcb;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    outline: none;
+    padding: 0.5em 1em;
+    background-color: #e0e0e0;
+    margin-bottom: 2em;
+}
+
+main#package .multi-fields details[open] summary {
+    margin-bottom: 0px;
+}
+
+main#package .multi-fields ul {
+    border: 1px solid #cbcbcb;
+    border-top: 0px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin-bottom: 2em;
+}
+
+main#package .multi-fields ul > li:nth-of-type(odd) {
+    background-color: #f2f2f2;
+}
+
+main#package .flag-button {
+    text-align: right;
+    padding-top: 1em;
+    padding-bottom: 1em;
+}
+
+main#package .flag-button a {
+    background: rgb(202, 60, 60);
+    color: white;
+    border-radius: 4px;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+/* flagged listing */
+
+main#flagged td.message {
+    text-align: center;
+}
+
+main#flagged td.message svg {
+    width: 1em;
+    height: 1em;
+    fill: #526066;
+}
+
+/* flag package */
+
+main#flag .pure-form-message {
+    margin-bottom: 1em;
+}
+
+main#flag aside {
+    background: #fcf8e3;
+    margin-top: 2em;
+    padding: 1em;
+    border-radius: 4px;
+    color: #8a6d3b;
+}
+
+main#flag .g-recaptcha {
+    margin-bottom: 1em;
+}
+
+/*
+ *  Pagination
+ */
+
+#pagination {
+    margin-top: 2em;
+}
+
+#pagination nav {
+    text-align: center;
+}
+
+#pagination li a {
+    position: relative;
+    float: left;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    color: rgb(61, 146, 201);
+}
+
+#pagination li {
     margin: 0;
     padding: 0;
 }
 
-body {
-    position: relative;
-    min-height: 100%;
-    background: #eee;
-    margin:auto;
-    width:80%;
+#pagination li.active a {
+    background: rgb(61, 146, 201);
+    color: #fff;
 }
 
-header {
-    border-bottom: 2px solid #17a;
-    display: inline-block;
-    width: 100%;
-    /* fix inline-block auto margin */
-    margin-bottom: -4px;
-}
-
-@media all and (max-width:40.000em) { body { width: 97% } }
-
-#main {
-    background: #fff;
-    padding: 10px;
-    margin:0px;
-}
-
-form#search {
-    margin: 10px;
-}
+/*
+ * Footer styling
+ */
 
 footer {
-    margin: 10px;
+    background: #111;
+    color: #888;
     text-align: center;
-    font-size: 0.8em
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding-top: 0.8em;
+    padding-bottom: 0.8em;
+    font-size: 0.8em;
 }
 
-img#logo {
-    width:300px;
-    float: left;
-    margin: 1em;
-    margin-right: 2em;
+footer a { 
+    color: #ddd;
 }
 
-#sitenav {
-    float: right;
-    margin-top: 5em;
-}
 
-#pagenav {
-    float: left;
-    margin-top: 3em;
-    font-weight: bold;
-}
+/*
+ * MEDIA queries
+ */
 
-nav a {
-    padding:3.2em 1em 3.2em;
-}
+/* phones */
 
-nav a.active {
-    background-color: #17a;
-    color: white;
-}
+@media (min-width: 31em) {}
 
-/* icons on deps toggle */
+/* tablets */
 
-.panel-heading .accordion-toggle:after {
-    font-family: 'Glyphicons Halflings';
-    content: "\e114";
-    float: right;
-    color: grey;
-}
-.panel-heading .accordion-toggle.collapsed:after {
-    content: "\e080";
-}
+@media(min-width: 48em) {}
 
-/* support different cursor */
+/* responsive menu */
 
-.cursor-pointer {
-    cursor: pointer;
-}
+@media (max-width: 63.999em) {
+    header .logo img {
+        max-width: 16em;
+    }
+    header .menu-external {
+        text-align: left;
+        font-style: normal;
+    }
 
-.popover-content {
-    word-wrap: break-word;
+    header .menu-local {
+        position: static;
+        bottom: auto;
+    }
+    
+    #menu-toggle {
+        display: block;
+    }
+
+    .menu-wrapper nav.pure-menu ul,
+    .menu-wrapper nav.pure-menu ul li {
+        display: block;
+    }
+
+    #menu-toggle-cb ~ .menu-wrapper {
+        max-height: 0;
+        overflow: hidden;
+    }
+
+    #menu-toggle-cb:checked ~ .menu-wrapper {
+        max-height: 25em;
+    }
+
+    #menu-toggle-cb ~ .menu-wrapper,
+    #menu-toggle-cb:checked ~ .menu-wrapper {
+        -webkit-transition: max-height 0.8s;
+        -moz-transition: max-height 0.8s;
+        -ms-transition: max-height 0.8s;
+        -o-transition: max-height 0.8s;
+        transition: max-height 0.8s;
+    }
+
 }
