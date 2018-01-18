@@ -28,8 +28,10 @@ function model.packages(pkgs, branch)
         r[k].version = {
             path=string.format("/flag/%s/%s/%s", v.repo, v.origin, v.version),
             text=v.version,
-            title="Flag this package out of date"
+            title="Flag this package out of date",
+            class="text-success"
         }
+
         r[k].url = {
             path=v.url,
             text="URL",
@@ -41,14 +43,28 @@ function model.packages(pkgs, branch)
         r[k].repo = v.repo
         r[k].maintainer = v.mname or "None"
         r[k].build_time = v.build_time
-        if (v.flagged) then r[k].flagged = {date=v.flagged} end
+        if (v.flagged) then
+            r[k].version.title = "Flagged: "..v.flagged
+            r[k].version.class = "text-danger"
+            r[k].version.path = "#"
+        end
         if branch == conf.default.branch then r[k].default = true end
     end
     return r
 end
 
+-- multiple selected fields are not valid markup
+local function select_placeholder(args)
+    local res = {}
+    for _,k in ipairs({"branch", "repo", "arch", "maintainer"}) do
+        if args[k] == "" then res[k] = "selected" end
+    end
+    return res
+end
+
 function model.packagesForm(args, distinct)
     local m = {}
+    m.placeholder = select_placeholder(args)
     m.name = args.name
     m.branch = model.FormSelect({unpack(conf.branches)}, args.branch)
     m.repo = model.FormSelect({unpack(conf.repos)}, args.repo)
@@ -59,7 +75,7 @@ end
 
 function model.FormSelect(options, selected)
     local r = {}
-    table.insert(options, 1, "")
+    --table.insert(options, 1, "")
     for k,v in pairs(options) do
         r[k] = {text=v}
         if (v==selected) then r[k].selected = "selected" end
@@ -134,6 +150,7 @@ end
 
 function model.flaggedForm(args, maintainers)
     local m = {}
+    m.placeholder = select_placeholder(args)
     m.origin = args.origin
     m.repo = model.FormSelect({unpack(conf.repos)}, args.repo)
     m.maintainer = model.FormSelect(maintainers, args.maintainer)
@@ -198,6 +215,7 @@ function model.contentsForm(args)
     m.file = args.file
     m.path = args.path
     m.name = args.name
+    m.placeholder = select_placeholder(args)
     m.branch = model.FormSelect({unpack(conf.branches)}, args.branch)
     m.repo = model.FormSelect({unpack(conf.repos)}, args.repo)
     m.arch = model.FormSelect({unpack(conf.archs)}, args.arch)

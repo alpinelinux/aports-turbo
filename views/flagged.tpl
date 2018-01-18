@@ -1,83 +1,85 @@
 {{{header}}}
-    <script>
-        $(document).ready(function(){
-            $('[data-toggle="tooltip"]').tooltip({container: 'html'});
-            $('.chosen-select').chosen({allow_single_deselect: true});
-            $('[data-toggle="popover"]').popover();
-        });
-    </script>
-    <div id="main">
-        <div class="panel panel-default">
-            <div class="panel-heading">Search for packages</div>
-            <div class="panel-body">
-                <form class="form-inline" role="form" id="search">
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="origin" name="origin" value="{{form.origin}}" placeholder="Origin" autofocus>
-                            <span data-toggle="tooltip" class="input-group-addon cursor-pointer" title="Use * and ? as wildcards">?</span>
-                        </div>
+        <main id="flagged">
+            <div class="grid-head">Flagged filter</div>
+            <div class="grid-body" id="search-form">
+                <div class="pure-g">
+                    <div class="pure-u-1">
+                        <form class="pure-form pure-form-stacked">
+                            <div class="pure-g">
+                                <div class="pure-u-1 pure-u-md-4-24 form-field hint--top" aria-label="Use * and ? as wildcards">
+                                        <input class="pure-input-1" type="text" id="origin" name="origin" value="{{form.origin}}" placeholder="Origin" autofocus>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-2-24 form-field">
+                                    <select class="pure-input-1" name="repo" id="repo">
+                                        <option value="" disabled {{form.placeholder.repo}}>Repository</option>
+                                    {{#form.repo}}
+                                        <option {{{selected}}}>{{text}}</option>
+                                    {{/form.repo}}
+                                    </select>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-5-24 form-field">
+                                    <select class="pure-input-1" name="maintainer" id="maintainer">
+                                        <option value="" disabled {{form.placeholder.maintainer}}>Maintainer</option>
+                                    {{#form.maintainer}}
+                                        <option {{{selected}}}>{{text}}</option>
+                                    {{/form.maintainer}}
+                                    </select>
+                                </div>
+                                <div class="pure-u-1 pure-u-md-3-24 form-button">
+                                    <button type="submit" class="pure-button pure-button-primary">Search</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
-                    <div class="form-group">
-                        <select name="repo" data-placeholder="Repository" class="form-control chosen-select" id="repo">
-                        {{#form.repo}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.repo}}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <select name="maintainer" data-placeholder="Maintainer" class="form-control chosen-select" id="maintainer">
-                        {{#form.maintainer}}
-                            <option {{{selected}}} >{{text}}</option>
-                        {{/form.maintainer}}
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Search</button>
-                </form>
+                </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-striped table-bordered table-condensed">
-                    <tr>
-                        <th>Origin</th>
-                        <th>Version</th>
-                        <th>New version</th>
-                        <th>Repository</th>
-                        <th>Maintainer</th>
-                        <th>Flag date</th>
-                        <th>Message</th>
-                    </tr>
-                    {{#pkgs}}
-                    <tr>
-                        <td class="package">
-                            <a data-toggle="tooltip" title="{{origin.title}}" href="{{origin.path}}">{{origin.text}}</a>
-                        </td>
-                        <td class="version text-danger"><strong>{{version}}</strong></td>
-                        <td class="new_version">{{new_version}}</td>
-                        <td class="repo">{{repo}}</td>
-                        <td class="maintainer">{{maintainer}}</td>
-                        <td class="created">{{created}}</td>
-                        <td class="message text-center">
-                            <a class="text-muted" href="#" title="Message" data-toggle="popover" data-container="body" data-placement="left" data-trigger="click" data-content="{{message}}">
-                                <span class="glyphicon glyphicon-comment"></span>
-                            </a>
-                        </td>
-                    </tr>
-                    {{/pkgs}}
-                    {{^pkgs}}
-                    <tr>
-                        <td colspan="8">No item found...</td>
-                    </tr>
-                    {{/pkgs}}
+                <table class="pure-table pure-table-striped">
+                    <thead>
+                        <tr>
+                            <th>Origin</th>
+                            <th>Version</th>
+                            <th>New version</th>
+                            <th>Repository</th>
+                            <th>Maintainer</th>
+                            <th>Flag date</th>
+                            <th>Message</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#pkgs}}
+                        <tr>
+                            <td class="package">
+                                <a href="{{origin.path}}">{{origin.text}}</a>
+                            </td>
+                            <td class="version text-danger"><strong>{{version}}</strong></td>
+                            <td class="new_version">{{new_version}}</td>
+                            <td class="repo">{{repo}}</td>
+                            <td class="maintainer">{{maintainer}}</td>
+                            <td class="created">{{created}}</td>
+                            <td class="message">
+                                <img src="/assets/comment.svg" alt="comment" title="{{message}}">
+                            </td>
+                        </tr>
+                        {{/pkgs}}
+                        {{^pkgs}}
+                        <tr>
+                            <td colspan="7">No item found...</td>
+                        </tr>
+                        {{/pkgs}}
+                    </tbody>
                 </table>
             </div>
-            <div class="panel-footer text-center">
+            <div class="pure-menu pure-menu-horizontal" id="pagination">
                 <nav>
-                    <ul class="pagination">
+                    <ul class="pure-menu-list">
                     {{#pager}}
-                    <li class="{{{class}}}"><a href="/flagged?{{{args}}}">{{{page}}}</a></li>
+                    <li class="pure-menu-item {{{class}}}">
+                        <a class="pure-menu-link" href="/flagged?{{{args}}}">{{{page}}}</a>
+                    </li>
                     {{/pager}}
                     </ul>
                 </nav>
             </div>
-        </div>
-    </div>
+        </main>
 {{{footer}}}
