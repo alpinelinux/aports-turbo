@@ -95,7 +95,7 @@ config.git = {}
 ----
 config.git.commit = "http://git.alpinelinux.org/cgit/aports/commit/?id=%s"
 ----
--- url to the git repo direcotry
+-- url to the git repo directory
 ----
 config.git.pkgpath = "http://git.alpinelinux.org/cgit/aports/tree/%s/%s?h=%s"
 ----
