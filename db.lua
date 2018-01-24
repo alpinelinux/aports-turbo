@@ -25,10 +25,17 @@ function db:close()
     end
 end
 
-function db:debug(fname, sql)
+function db:debug(fname, sql, fields)
+    local ft = "None"
     if conf.db.debug == true then
-        print(("Function: %s \nDatabase error: %s \nSQL Query:\n%s"):format(
-            fname, self.db:errmsg(), sql))
+        if type(fields) == "table" and next(fields) then
+            ft = "\n"
+            for k,v in pairs(fields) do
+                ft = ft..("%-20s = %s\n"):format(k,v)
+            end
+        end
+        print(("Function: %s\nDatabase error: %s\nSQL Query:\n%s\nFields: %s"):format(
+            fname, self.db:errmsg(), sql, ft))
     end
 end
 
@@ -123,7 +130,7 @@ function db:getPackages(args, offset)
     -- only get flagged status for default branch
     local sql = (args.branch == conf.default.branch) and sql1 or sql2
     local stmt = self.db:prepare(sql)
-    self:debug("getPackages", sql)
+    self:debug("getPackages", sql, bind)
     stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
         table.insert(r, row)
@@ -140,7 +147,7 @@ function db:countPackages(args)
         %s
     ]], where)
     local stmt = self.db:prepare(sql)
-    self:debug("countPackages", sql)
+    self:debug("countPackages", sql, bind)
     stmt:bind_names(bind)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
     stmt:finalize()
@@ -168,7 +175,7 @@ function db:getPackage(branch, repo, arch, pkgname)
     -- only get flagged status for default branch
     local sql = (branch == conf.default.branch) and sql1 or sql2
     local stmt = self.db:prepare(sql)
-    self:debug("getPackage", sql)
+    self:debug("getPackage", sql, {repo, arch, pkgname})
     stmt:bind_values(repo, arch, pkgname)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_named_values() or {}
     stmt:finalize()
@@ -187,7 +194,7 @@ function db:getDepends(pkg)
         ORDER BY pa.name
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("getDepends", sql)
+    self:debug("getDepends", sql, pkg)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
         if row.name ~= pkg.name then
@@ -209,7 +216,7 @@ function db:getProvides(pkg)
         ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("getProvides", sql)
+    self:debug("getProvides", sql, pkg)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
         if row.name ~= pkg.name then
@@ -229,7 +236,7 @@ function db:getOrigins(pkg)
         ORDER BY packages.name
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("getOrigins", sql)
+    self:debug("getOrigins", sql, pkg)
     stmt:bind_names(pkg)
     for row in stmt:nrows(sql) do
         if row.name ~= pkg.name then
@@ -251,7 +258,7 @@ function db:getContents(args, offset)
         %s
         LIMIT 50 OFFSET %s
     ]], where, offset)
-    self:debug("getContents", sql)
+    self:debug("getContents", sql, bind)
     local stmt = self.db:prepare(sql)
     stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
@@ -270,7 +277,7 @@ function db:countContents(args)
         %s
     ]], where)
     local stmt = self.db:prepare(sql)
-    self:debug("countContents", sql)
+    self:debug("countContents", sql, bind)
     stmt:bind_names(bind)
     local r = (stmt:step()==sqlite3.ROW) and stmt:get_value(0) or 0
     stmt:finalize()
@@ -301,7 +308,7 @@ function db:getFlagged(args, offset)
         ORDER BY flagged.created DESC
     ]], where)
     local stmt = self.db:prepare(sql)
-    self:debug("getFlagged", sql)
+    self:debug("getFlagged", sql, bind)
     stmt:bind_names(bind)
     for row in stmt:nrows(sql) do
         cnt = get_offset(r, row, offset, cnt)
@@ -317,7 +324,7 @@ function db:isFlagged(origin, repo, version)
         LIMIT 1
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("isFlagged", sql)
+    self:debug("isFlagged", sql, {origin, repo, version})
     stmt:bind_values(origin, repo, version)
     local r = (stmt:step()==sqlite3.ROW) and true or false
     stmt:finalize()
@@ -331,7 +338,7 @@ function db:isOrigin(repo, origin, version)
         LIMIT 1
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("isOrigin", sql)
+    self:debug("isOrigin", sql, {repo, origin, version})
     stmt:bind_values(repo, origin, version)
     local r = (stmt:step()==sqlite3.ROW) and true or false
     stmt:finalize()
@@ -348,7 +355,7 @@ function db:getMaintainer(origin)
         GROUP BY origin
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("getMaintainer", sql)
+    self:debug("getMaintainer", sql, {origin})
     stmt:bind_values(origin)
     if stmt:step() == sqlite3.ROW then
         res = stmt:get_named_values()
@@ -374,7 +381,7 @@ function db:flagOrigin(args, pkg)
         )
     ]]
     local stmt = self.db:prepare(sql)
-    self:debug("flagOrigin", sql)
+    self:debug("flagOrigin", sql, args)
     stmt:bind_names(args)
     if stmt:step() == sqlite3.DONE then res = true end
     stmt:finalize()
