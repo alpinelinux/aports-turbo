@@ -178,11 +178,13 @@ end
 function db:getDepends(pkg)
     local r = {}
     local sql = [[
-        SELECT DISTINCT packages.* FROM depends
-        LEFT JOIN provides ON depends.name = provides.name
-        LEFT JOIN packages ON provides.pid = packages.id
-        WHERE packages.arch = :arch AND depends.pid = :id
-        ORDER BY packages.name
+        SELECT pa.repo, pa.arch, pa.name, MAX(pa.provider_priority)
+        FROM depends de
+        LEFT JOIN provides pr ON de.name = pr.name
+        LEFT JOIN packages pa ON pr.pid = pa.id
+        WHERE pa.arch = :arch AND de.pid = :id
+        GROUP BY pr.name
+        ORDER BY pa.name
     ]]
     local stmt = self.db:prepare(sql)
     self:debug("getDepends", sql)
