@@ -1,13 +1,9 @@
----------
--- Common module for anitya-check-all and anitya-watch with integration
--- to aports.
+local gversion = require("gversion")
+local log      = require("turbo.log")
 
-local gversion = require 'gversion'
-local log      = require 'turbo.log'
-
-local conf     = require 'config'
-local db       = require 'db'
-local cntrl    = require 'controller'
+local conf     = require("config")
+local db       = require("db")
+local cntrl    = require("controller")
 
 local format = string.format
 local normalize_version = gversion.normalize
@@ -16,7 +12,6 @@ local branch = conf.default.branch
 
 local pre_suffixes = {'alpha', 'beta', 'pre', 'rc'}
 gversion.set_suffixes(pre_suffixes, {'cvs', 'svn', 'git', 'hg', 'p'})
-
 
 --- Flags `pkg` as outdated and send email to its maintainer.
 --
@@ -31,11 +26,10 @@ local function flag_package(pkg, new_version)
     db:open()
     assert(db:flagOrigin(flag_fields, pkg),
         'Failed to flag package: '..pkg.origin)
-    assert(cntrl:flagMail(flag_fields, pkg),
+    assert(cntrl.flagMail(flag_fields, pkg),
         'Failed to send email for package: '..pkg.origin)
     db:close()
 end
-
 
 --- Compares the current version with new version and returns true if the
 -- current version is outdated.
@@ -66,6 +60,35 @@ local function is_outdated(curr_ver, new_ver)
     return true
 end
 
+-- get all packages with same origin and return only the row with the
+-- highest version number
+local function get_latest_pkg(origin)
+    local res = {}
+    local ldb = db.raw_db(branch)
+    local stmt = ldb:prepare [[
+        SELECT DISTINCT p.version, p.origin, p.repo, f.new_version,
+        m.email as memail
+        FROM packages p
+        LEFT JOIN flagged f
+        ON p.repo = f.repo AND p.origin = f.origin AND p.version = f.version
+        LEFT JOIN maintainer m
+        ON p.maintainer = m.id
+        WHERE p.origin = ?
+    ]]
+    stmt:bind_values(origin)
+    for row in stmt:nrows() do
+        if next(res) then
+            local next_ver = gversion.parse(gversion.normalize(row.version))
+            local curr_ver = gversion.parse(gversion.normalize(res.version))
+            res = (next_ver > curr_ver) and row or res
+        else
+            res = row
+        end
+    end
+    stmt:finalize()
+    ldb:close()
+    return res
+end
 
 local M = {}
 
@@ -86,68 +109,21 @@ function M.each_aport_name()
     end)
 end
 
---- Flags packages with origin `origin_name` in the edge branch that have older
--- version than `new_ver`, are not flagged yet or the flag specifies an older
--- version than `new_ver`.
---
--- If the database is not opened, then it opens it and close after finish.
---
--- @tparam string origin_name
--- @tparam string new_ver
--- @raise Error if `new_ver` or current version cannot be parsed, if fail to
---   flag a package or send email to maintainer.
-function M.flag_outdated_pkgs(origin_name, new_ver)
+function M.flag_outdated_pkgs(origin, new_ver)
     new_ver = assert(parse_version(normalize_version(new_ver)),
-                     'Malformed new version: '..new_ver)
-    local ldb = db.raw_db(branch)
-    local stmt1 = ldb:prepare [[
-        SELECT DISTINCT p.version, f.new_version
-        FROM packages p
-        LEFT JOIN flagged f
-        ON p.repo = f.repo AND p.origin = f.origin AND p.version = f.version
-        WHERE p.origin = ?
-    ]]
-    stmt1:bind_values(origin_name)
-
-    local finalize = function()
-        if ldb:isopen() then ldb:close() end
-    end
-
-    local rows = {}
-    for row in stmt1:nrows() do
-        table.insert(rows, row)
-    end
-    stmt1:finalize()
-
-    for _,v in ipairs(rows) do
-        local curr_ver = parse_version(v.version)
-        if not curr_ver then
-            finalize()
-            error('Malformed current version: '..v.version)
-        end
-
-        local flag_ver = parse_version(normalize_version(v.new_version or ''))
+        'Malformed new version: '..new_ver)
+    local pkg = get_latest_pkg(origin)
+    if next(pkg) then
+        local curr_ver = parse_version(pkg.version)
+        if not curr_ver then error('Malformed current version: '..pkg.version) end
+        local flag_ver = parse_version(normalize_version(pkg.new_version or ''))
         if (not flag_ver or new_ver > flag_ver) and is_outdated(curr_ver, new_ver) then
-            local stmt2 = ldb:prepare [[
-                SELECT DISTINCT origin, version, repo
-                FROM packages p
-                WHERE p.origin = :origin
-                AND p.version = :version
-            ]]
-            stmt2:bind_values(origin_name, v.version)
-            local pkg = (stmt2:step() == 100) and stmt2:get_named_values() or {}
-            stmt2:finalize()
             log.notice(format('Flagging package %s-%s, new version is %s',
-                              pkg.origin, pkg.version, new_ver))
-
+                origin, curr_ver, new_ver))
             local ok, err = pcall(flag_package, pkg, tostring(new_ver))
-            if not ok then
-                finalize()
-                error(err, 2)
-            end
+            if not ok then error(err, 2) end
         end
     end
-    finalize()
 end
 
 return M

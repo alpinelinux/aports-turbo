@@ -362,15 +362,17 @@ function db:flagOrigin(args, pkg)
     args.version = pkg.version
     args.repo = pkg.repo
     local sql = [[
-        INSERT INTO flagged (
-            origin, version, repo, created, reporter, new_version, message
+        INSERT OR REPLACE INTO flagged (
+            origin, version, repo, created, updated, reporter, new_version,
+            message
         )
         VALUES (
-            :origin, :version, :repo, strftime('%s', 'now'), :from,
+            :origin, :version, :repo, strftime('%s', 'now'), NULL, :from,
             :new_version, :message
         )
     ]]
     local stmt = self.db:prepare(sql)
+    self:debug("flagOrigin", sql)
     stmt:bind_names(args)
     if stmt:step() == sqlite3.DONE then res = true end
     stmt:finalize()
