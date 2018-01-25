@@ -58,7 +58,9 @@
                             <td class="maintainer">{{maintainer}}</td>
                             <td class="created">{{created}}</td>
                             <td class="message">
-                                <img src="/assets/comment.svg" alt="comment" title="{{message}}">
+                                <div class="{{class}}" aria-label="{{message}}">
+                                    <img src="/assets/comment.svg" alt="comment">
+                                </div>
                             </td>
                         </tr>
                         {{/pkgs}}

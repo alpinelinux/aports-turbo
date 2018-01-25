@@ -130,6 +130,7 @@ end
 function model.flagged(pkgs)
     local r = {}
     for k,v in pairs(pkgs) do
+        local class = k < (conf.pager.limit/2) and "bottom" or "top"
         r[k] = {}
         r[k].origin = {
             path = ("packages?branch=%s&repo=%s&name=%s"):format(
@@ -144,6 +145,7 @@ function model.flagged(pkgs)
         r[k].maintainer = v.mname or "None"
         r[k].created = v.created
         r[k].message = v.message
+        r[k].class = "hint--"..class.."-left hint--medium hint--rounded"
     end
     return r
 end

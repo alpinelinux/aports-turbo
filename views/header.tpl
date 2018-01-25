@@ -6,7 +6,7 @@
     <title>Alpine Linux packages</title>
     <link rel="stylesheet" href="/assets/pure-min.css">
     <link rel="stylesheet" href="/assets/grids-responsive-min.css">
-    <link rel="stylesheet" href="/assets/hint.base.min.css">
+    <link rel="stylesheet" href="/assets/hint.min.css">
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="shortcut icon" href="/assets/favicon.ico">
 </head>
