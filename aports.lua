@@ -115,8 +115,7 @@ function flagRenderer:post(repo, origin, version)
             if not r then turbo.log.warning(e) end
         end
         m.alert = {type="success",msg="Succesfully flagged package"}
-        args = { origin = pkg.origin, repo = pkg.repo,
-            maintainer = maintainer.name, page = 1 }
+        args = { origin = pkg.origin, repo = pkg.repo, page = 1 }
         self:write(cntrl.flagged(args, m))
     end
 end
