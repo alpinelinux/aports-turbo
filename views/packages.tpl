@@ -91,7 +91,7 @@
                     {{/pkgs}}
                     {{^pkgs}}
                     <tr>
-                        <td colspan="8">No item found...</td>
+                        <td colspan="9">No item found...</td>
                     </tr>
                     {{/pkgs}}
                     </tbody>
