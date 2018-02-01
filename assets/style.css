@@ -284,6 +284,37 @@ main#flagged td.message svg {
     fill: #526066;
 }
 
+main#flagged td.message [class*=hint--] {
+    position: absolute;
+    visibility: hidden;
+    right: 84px;
+    width: 0;
+    height: 0;
+}
+
+main#flagged td.message img:hover + [class*=hint--]:before,
+main#flagged td.message img:hover + [class*=hint--]:after {
+    visibility: visible;
+    opacity: 1;
+}
+
+main#flagged td.message [class*=hint--]:after,
+main#flagged td.message [class*=hint--]:before {
+    display: inline-block;
+    position: relative;
+    left: initial;
+}
+
+main#flagged td.message [class*=hint--]:before {
+    right: calc(150% + 12px);
+    top: 12px;
+}
+
+main#flagged td.message [class*=hint--]:after {
+    right: calc(100% + 6px);
+    top: 8px;
+}
+
 /* flag package */
 
 main#flag .pure-form-message {
