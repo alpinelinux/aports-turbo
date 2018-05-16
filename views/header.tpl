@@ -34,10 +34,10 @@
                 </nav>
                 <nav class="pure-menu pure-menu-horizontal menu-external">
                     <ul class="pure-menu-list">
-                        <li class="pure-menu-item"><a href="https://mirrors.alpinelinux.org" class="pure-menu-link">mirrors</a></li>
                         <li class="pure-menu-item"><a href="https://wiki.alpinelinux.org" class="pure-menu-link">wiki</a></li>
                         <li class="pure-menu-item"><a href="https://git.alpinelinux.org" class="pure-menu-link">git</a></li>
                         <li class="pure-menu-item"><a href="https://bugs.alpinelinux.org/projects/alpine/issues" class="pure-menu-link">bugs</a></li>
+                        <li class="pure-menu-item"><a href="https://mirrors.alpinelinux.org" class="pure-menu-link">mirrors</a></li>
                     </ul>
                 </nav>
             </div>
