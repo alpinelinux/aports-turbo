@@ -38,7 +38,6 @@
                         <li class="pure-menu-item"><a href="https://wiki.alpinelinux.org" class="pure-menu-link">wiki</a></li>
                         <li class="pure-menu-item"><a href="https://git.alpinelinux.org" class="pure-menu-link">git</a></li>
                         <li class="pure-menu-item"><a href="https://bugs.alpinelinux.org/projects/alpine/issues" class="pure-menu-link">bugs</a></li>
-                        <li class="pure-menu-item"><a href="https://forum.alpinelinux.org/forum" class="pure-menu-link">forums</a></li>
                     </ul>
                 </nav>
             </div>
