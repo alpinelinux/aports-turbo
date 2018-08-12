@@ -185,7 +185,7 @@ end
 function db:getDepends(pkg)
     local r = {}
     local sql = [[
-        SELECT pa.repo, pa.arch, pa.name, MAX(pa.provider_priority)
+        SELECT DISTINCT pa.repo, pa.arch, pa.name, MAX(pa.provider_priority)
         FROM depends de
         LEFT JOIN provides pr ON de.name = pr.name
         LEFT JOIN packages pa ON pr.pid = pa.id
