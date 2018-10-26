@@ -2,7 +2,7 @@ local config = {}
 ----
 -- the application uri
 ----
-config.uri = "http://pkgs.alpinelinux.org"
+config.uri = "https://pkgs.alpinelinux.org"
 ----
 -- Turbo listening port
 -- can be overridden by setting the env var TURBO_PORT
@@ -93,11 +93,11 @@ config.git = {}
 ----
 -- url to alpine git browser
 ----
-config.git.commit = "http://git.alpinelinux.org/cgit/aports/commit/?id=%s"
+config.git.commit = "https://git.alpinelinux.org/cgit/aports/commit/?id=%s"
 ----
 -- url to the git repo directory
 ----
-config.git.pkgpath = "http://git.alpinelinux.org/cgit/aports/tree/%s/%s?h=%s"
+config.git.pkgpath = "https://git.alpinelinux.org/cgit/aports/tree/%s/%s?h=%s"
 ----
 -- url to the build log
 ----
