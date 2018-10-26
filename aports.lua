@@ -99,7 +99,7 @@ function flagRenderer:post(repo, origin, version)
         m.form.message = {class="input-error"}
         self:write(cntrl.flag(pkg, m))
     -- check if recaptcha is correct
-    elseif conf.rc.sitekey and not cntrl.verifyRecaptcha(args.responce) then
+    elseif conf.rc.enabled and not cntrl.verifyRecaptcha(args.responce) then
         m.alert = {type="danger",msg="reCAPTCHA failed, please try again"}
         self:write(cntrl.flag(pkg, m))
     -- try to flag the package

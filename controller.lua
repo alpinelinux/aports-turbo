@@ -204,9 +204,13 @@ function cntrl.createPager(total, limit, current, offset)
 end
 
 ----
--- verify recaptch responce
+-- verify recaptcha response
 ----
 function cntrl.verifyRecaptcha(response)
+    if conf.rc.sitekey == "" then
+        turbo.log.warning("reCAPTCHA site key not found.")
+        return true
+    end
     local uri = "https://www.google.com/recaptcha/api/siteverify"
     local kwargs = {}
     kwargs.method = "POST"
