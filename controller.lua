@@ -32,6 +32,7 @@ end
 function cntrl.packages(args)
     db:select(args.branch)
     local m = {}
+    m.args = args
     -- get packages
     local offset = (args.page - 1) * conf.pager.limit
     local pkgs = db:getPackages(args, offset)
@@ -93,6 +94,7 @@ end
 function cntrl.contents(args)
     db:select(args.branch)
     local m = {}
+    m.args = args
     -- navigation menu
     m.nav = {content="active"}
     -- search form
@@ -143,6 +145,7 @@ end
 function cntrl.flagged(args, m)
     db:select(conf.default.branch)
     m = m or {}
+    m.args = args
     -- get packages
     local offset = (args.page - 1) * conf.pager.limit
     local pkgs, qty = db:getFlagged(args, offset)

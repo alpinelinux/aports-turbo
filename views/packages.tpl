@@ -83,9 +83,21 @@
                         <td class="url"><a href="{{url.path}}">{{url.text}}</a></td>
                         <td class="license">{{license}}</td>
                         <td class="branch">{{branch}}</td>
-                        <td class="repo">{{repo}}</td>
-                        <td class="arch">{{arch}}</td>
-                        <td class="maintainer">{{maintainer}}</td>
+                        <td class="repo">
+                            <a class="hint--right" aria-label="{{repo.title}}" href="?name={{args.name}}&branch={{args.branch}}&repo={{repo.text}}&arch={{args.arch}}&maintainer={{args.maintainer}}">
+                                {{repo.text}}
+                            </a>
+                        </td>
+                        <td class="arch">
+                            <a class="hint--right" aria-label="{{arch.title}}" href="?name={{args.name}}&branch={{args.branch}}&repo={{args.repo}}&arch={{arch.text}}&maintainer={{args.maintainer}}">
+                                {{arch.text}}
+                            </a>
+                        </td>
+                        <td class="maintainer">
+                            <a class="hint--right" aria-label="{{maintainer.title}}" href="?name={{args.name}}&branch={{args.branch}}&repo={{args.repo}}&arch={{args.arch}}&maintainer={{maintainer.text}}">
+                                {{maintainer.text}}
+                            </a>
+                        </td>
                         <td class="bdate">{{build_time}}</td>
                     </tr>
                     {{/pkgs}}

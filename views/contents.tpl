@@ -64,8 +64,16 @@
                             <td>{{file}}</td>
                             <td><a href="{{pkgname.path}}">{{pkgname.text}}</a></td>
                             <td>{{branch}}</td>
-                            <td>{{repo}}</td>
-                            <td>{{arch}}</td>
+                            <td class="repo">
+                                <a class="hint--right" aria-label="{{repo.title}}" href="?file={{args.file}}&path={{args.path}}&name={{args.name}}&branch={{args.branch}}&repo={{repo.text}}&arch={{args.arch}}">
+                                    {{repo.text}}
+                                </a>
+                            </td>
+                            <td class="arch">
+                                <a class="hint--right" aria-label="{{arch.title}}" href="?file={{args.file}}&path={{args.path}}&name={{args.name}}&branch={{args.branch}}&repo={{args.repo}}&arch={{arch.text}}">
+                                    {{arch.text}}
+                                </a>
+                            </td>
                         </tr>
                         {{/contents}}
                         {{^contents}}
