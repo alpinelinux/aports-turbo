@@ -75,6 +75,7 @@ local function format_args(args, type)
         r.files = {}
         r.files.file = args.file
         r.files.path = args.path
+        r.packages.repo = args.repo
     end
     return r
 end
