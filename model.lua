@@ -39,9 +39,19 @@ function model.packages(pkgs, branch)
         }
         r[k].license = v.license
         r[k].branch = branch
-        r[k].arch = v.arch
-        r[k].repo = v.repo
-        r[k].maintainer = v.mname or "None"
+        r[k].arch = {
+            text=v.arch,
+            title=string.format("Filter packages in the %s architecture", v.arch)
+        }
+        r[k].repo = {
+            text=v.repo,
+            title=string.format("Filter packages in the %s repository", v.repo)
+        }
+        maintainer = v.mname or "None"
+        r[k].maintainer = {
+            text=maintainer,
+            title=string.format("Filter packages maintained by %s", maintainer)
+        }
         r[k].build_time = v.build_time
         if (v.flagged) then
             r[k].version.title = "Flagged: "..v.flagged
@@ -141,8 +151,15 @@ function model.flagged(pkgs)
         r[k].version = v.version
         r[k].new_version = v.new_version
         r[k].arch = v.arch
-        r[k].repo = v.repo
-        r[k].maintainer = v.mname or "None"
+        r[k].repo = {
+            text=v.repo,
+            title=string.format("Filter packages in the %s repository", v.repo)
+        }
+        maintainer = v.mname or "None"
+        r[k].maintainer = {
+            text=maintainer,
+            title=string.format("Filter packages maintained by %s", maintainer)
+        }
         r[k].created = v.created
         r[k].message = v.message
         r[k].class = "hint--"..class.."-left hint--medium hint--rounded"
@@ -202,8 +219,14 @@ function model.contents(cnt, branch)
     for k,v in pairs(cnt) do
         r[k] = {}
         r[k].branch = branch
-        r[k].repo = v.repo
-        r[k].arch = v.arch
+        r[k].repo = {
+            text=v.repo,
+            title=string.format("Filter packages in the %s repository", v.repo)
+        }
+        r[k].arch = {
+            text=v.arch,
+            title=string.format("Filter packages in the %s architecture", v.arch)
+        }
         r[k].file = string.format("%s/%s", v.path, v.file)
         r[k].pkgname = {}
         r[k].pkgname.path = string.format("/package/%s/%s/%s/%s", branch, v.repo, v.arch, v.name)

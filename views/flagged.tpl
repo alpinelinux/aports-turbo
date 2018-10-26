@@ -54,8 +54,16 @@
                             </td>
                             <td class="version text-danger"><strong>{{version}}</strong></td>
                             <td class="new_version">{{new_version}}</td>
-                            <td class="repo">{{repo}}</td>
-                            <td class="maintainer">{{maintainer}}</td>
+                            <td class="repo">
+                                <a class="hint--right" aria-label="{{repo.title}}" href="?origin={{args.origin}}&repo={{repo.text}}&maintainer={{args.maintainer}}">
+                                    {{repo.text}}
+                                </a>
+                            </td>
+                            <td class="maintainer">
+                                <a class="hint--right" aria-label="{{maintainer.title}}" href="?origin={{args.origin}}&repo={{args.repo}}&maintainer={{maintainer.text}}">
+                                    {{maintainer.text}}
+                                </a>
+                            </td>
                             <td class="created">{{created}}</td>
                             <td class="message">
                                 <div class="{{class}}" aria-label="{{message}}">
