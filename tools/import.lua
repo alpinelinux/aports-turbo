@@ -97,7 +97,7 @@ end
 local function create_flagged_table()
     if conf.db.init ~= true then return true end
     db:exec([[
-        CREATE TABLE IF NOT EXISTS 'flagged.flagged' (
+        CREATE TABLE IF NOT EXISTS 'flagged' (
             'origin' TEXT,
             'version' TEXT,
             'repo' TEXT,
