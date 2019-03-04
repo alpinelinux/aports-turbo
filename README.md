@@ -2,7 +2,7 @@
 
 Alpine Linux package database written in Lua.
 
-This application makes use of the [Turbo](http://turbolua.org) (Lua) framework.
+This application makes use of the [Turbo](https://turbo.readthedocs.io) (Lua) framework.
 
 On Alpine Linux it should be enough to install turbo and deps by: 
 
