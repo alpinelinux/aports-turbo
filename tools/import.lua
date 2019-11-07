@@ -1,9 +1,7 @@
 #!/usr/bin/env luajit
 
-local sqlite    = require("lsqlite3")
-
-local conf      = require("config")
-local utils     = require("utils")
+local sqlite = require("lsqlite3")
+local conf   = require("config")
 
 local db
 
@@ -11,6 +9,74 @@ local function log(msg)
     if conf.logging then
         print(msg)
     end
+end
+
+local function split(s,d)
+    local r = {}
+    for i in s:gmatch(d) do table.insert(r,i) end
+    return r
+end
+
+local function parse_email_addr(addr)
+    if not addr then return false end
+	local name, email = addr:match('%s*(.-)%s*<([^>]+)>')
+    email = email or addr:match('%S+@%S+')
+    if email and email:match('^[%w%._%+%-%%%]+@[%w%._%-]+%.%w+$') then
+        return name, email
+    end
+end
+
+--
+-- check if a file exists on disk or on http
+--
+local function file_exists(uri)
+    if uri:find("^https?://.*") then
+        local status = select(2, require("socket.http").request({
+            url = uri, method = "HEAD"}))
+        return status == 200 and true or false
+    else
+        local f = io.open(uri, "r")
+        return f ~= nil and io.close(f) or false
+    end
+end
+
+--
+-- list the contents of an archive
+--
+local function archive_list(uri)
+	local res, cmd = {}
+	local tmp = os.tmpname()
+	local gzip = (os.execute("command -v pigz > /dev/null") == 0) and "-I pigz" or "-z"
+	cmd = uri:find("^https?://.*") and "wget -qO- %q 2> /dev/null | tar %s -t > %q 2> %q"
+		or "tar -tf %q %s > %q 2> %q"
+	cmd = cmd:format(tostring(uri), gzip, tmp, "/dev/null")
+	local ret = os.execute(cmd)
+	if ret == 0 then
+		for line in io.lines(tmp) do
+			table.insert(res, line)
+		end
+	end
+	os.remove(tmp)
+	return ret, res
+end
+
+--
+-- get the contents of an file from an archive
+--
+local function archive_get_file(uri, file)
+    local res, cmd = {}
+    local tmp = os.tmpname()
+    cmd = uri:find("^https?://.*") and "wget -qO- %q 2> /dev/null | tar -Ozx %q > %q 2> %q"
+        or "tar -Ozxf %q %q > %q 2> %q"
+    cmd = cmd:format(tostring(uri), tostring(file), tmp, "/dev/null")
+    local ret = os.execute(cmd)
+    if ret == 0 then
+        for line in io.lines(tmp) do
+            table.insert(res, line)
+        end
+    end
+    os.remove(tmp)
+    return ret, res
 end
 
 local function sql_debug(fname, sql)
@@ -111,20 +177,6 @@ local function create_flagged_table()
     ]])
 end
 
----
--- get the current git describe from DESCRIPTION file
----
-local function get_repo_version(branch, repo, arch)
-    local res = {}
-    local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
-    local f = io.popen(("tar -Ozx -f '%s' DESCRIPTION"):format(index))
-    for line in f:lines() do
-        table.insert(res, line)
-    end
-    f:close()
-    if next(res) then return res[1] end
-end
-
 local function get_local_repo_version(repo, arch)
     local sql = [[
         SELECT version
@@ -158,70 +210,63 @@ end
 -- compare remote repo version with local and return remote version if updated
 ---
 local function repo_updated(branch, repo, arch)
-    local v = get_repo_version(branch, repo, arch)
-    local l = get_local_repo_version(repo, arch)
-    if (v ~= l) then return v end
+    local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
+    local version = get_local_repo_version(repo, arch)
+    local ret, desc = archive_get_file(index, "DESCRIPTION")
+    return (ret == 0 and version ~= desc[1]) and desc[1] or false
 end
 
 local function get_apk_index(branch, repo, arch)
-    local r,i = {},{}
-    local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
-    local f = io.popen(("tar -Ozx -f %q APKINDEX"):format(index))
-    for line in f:lines() do
-        if (line ~= "") then
-            local k,v = line:match("^(%a):(.*)")
-            local key = conf.index.fields[k]
-            if key then
-                r[key] = k:match("^[Dpi]$") and utils.split(v, "%S+") or v
-            end
-        else
-            local nv = ("%s-%s"):format(r.name, r.version)
-            r.repo = repo
-            r.branch = branch
-            i[nv] = r
-            r = {}
-        end
-    end
-    f:close()
-    return i
+	local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
+	local ret,lines = archive_get_file(index, "APKINDEX")
+	local res,pkg = {},{}
+	if ret == 0 then
+		for _,line in ipairs(lines) do
+			if line ~= "" then
+				local k,v = line:match("^(%a):(.*)")
+				local field = conf.index.fields[k]
+				pkg[field] = k:match("^[Dpi]$") and split(v, "%S+") or v
+			else
+				local idx = ("%s-%s"):format(pkg.name, pkg.version)
+				pkg.repo = repo
+				pkg.branch = branch
+				res[idx] = pkg
+				pkg = {}
+			end
+		end
+	end
+	return ret, res
 end
 
 local function get_changes(branch, repo, arch)
     local del = {}
-    local add = get_apk_index(branch, repo, arch)
-    local sql = [[
-        SELECT repo, arch, name, version, origin
-        FROM packages
-        WHERE repo = :repo
-        AND arch = :arch
-    ]]
-    local stmt = db:prepare(sql)
-    sql_debug("get_changes", sql)
-    stmt:bind_values(repo, arch)
-    for r in stmt:nrows() do
-        local nv = ("%s-%s"):format(r.name, r.version)
-        if add[nv] then
-            add[nv] = nil
-        else
-            del[nv] = r
-        end
-    end
-    stmt:finalize()
+    local ret, add = get_apk_index(branch, repo, arch)
+    if ret == 0 then
+	    local sql = [[
+	        SELECT repo, arch, name, version, origin
+	        FROM packages
+	        WHERE repo = :repo
+	        AND arch = :arch
+	    ]]
+	    local stmt = db:prepare(sql)
+	    sql_debug("get_changes", sql)
+	    stmt:bind_values(repo, arch)
+	    for r in stmt:nrows() do
+	        local nv = ("%s-%s"):format(r.name, r.version)
+	        if add[nv] then
+	            add[nv] = nil
+	        else
+	            del[nv] = r
+	        end
+	    end
+	    stmt:finalize()
+	end
     return add,del
 end
 
-local function format_maintainer(maintainer)
-    if maintainer then
-        local name, email = utils.parse_email_addr(maintainer)
-        if email then
-            return { name = name, email = email }
-        end
-    end
-end
-
 local function add_maintainer(maintainer)
-    local m = format_maintainer(maintainer)
-    if m then
+    local name, email = parse_email_addr(maintainer)
+    if email then
         local sql = [[
             INSERT OR REPLACE INTO maintainer ('id', 'name', 'email')
             VALUES (
@@ -232,7 +277,7 @@ local function add_maintainer(maintainer)
         ]]
         local stmt = db:prepare(sql)
         sql_debug("add_maintainer", sql)
-        stmt:bind_names(m)
+        stmt:bind_values(name, email)
         stmt:step()
         local r = stmt:last_insert_rowid()
         stmt:reset()
@@ -301,27 +346,19 @@ local function add_fields(pid, pkg)
     end
 end
 
-local function format_file(line)
-    local path, file
-    if line:match("/") then
-        path, file = line:match("(.*/)(.*)")
-        if path:match("/$") then path = path:sub(1, -2) end
-        return "/"..path,file
-    end
-    return "/", line
-end
-
 local function get_file_list(apk)
-    local r = {}
-    local f = io.popen(("tar ztf %q"):format(apk))
-    for line in f:lines() do
-        if not (line:match("^%.") or line:match("/$")) then
-            local path,file = format_file(line)
-            table.insert(r, {path=path,file=file})
-        end
-    end
-    f:close()
-    return r
+	local res = {}
+	local ret, list = archive_list(apk)
+	if ret == 0 then
+		for _,item in ipairs(list) do
+			if not (item:match("^%.") or item:match("/$")) then
+				local tbl = item:match("/") and {item:match("(.*)/(.*)")} or {"", item}
+				tbl[1] = ("/%s"):format(tbl[1])
+				table.insert(res, tbl)
+			end
+		end
+	end
+	return res
 end
 
 local function add_files(pid, apk, pkg)
@@ -337,9 +374,7 @@ local function add_files(pid, apk, pkg)
     local stmt = db:prepare(sql)
     sql_debug("add_files", sql)
     for _,file in pairs(files) do
-        file.pkgname = pkg.name
-        file.pid = pid
-        stmt:bind_names(file)
+        stmt:bind_names({pkgname=pkg.name, pid=pid, path=file[1], file=file[2]})
         stmt:step()
         stmt:reset()
     end
@@ -350,7 +385,7 @@ local function add_packages(branch, add)
     for _,pkg in pairs(add) do
         local apk = ("%s/%s/%s/%s/%s-%s.apk"):format(conf.mirror, branch,
             pkg.repo, pkg.arch, pkg.name, pkg.version)
-        if utils.file_exists(apk) then
+        if file_exists(apk) then
             log(("Adding: %s/%s/%s/%s-%s"):format(branch, pkg.repo, pkg.arch,
                 pkg.name, pkg.version))
             pkg.maintainer = add_maintainer(pkg.maintainer)
@@ -417,21 +452,18 @@ local function update_flagged(unflag)
 end
 
 local function update(branch, repo, arch)
-    local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
     local res = {}
-    if utils.file_exists(index) then
-        local version = repo_updated(branch, repo, arch)
-        if version then
-            log(("Updating: %s/%s/%s"):format(branch, repo, arch))
-            local add,del = get_changes(branch, repo, arch)
-            add_packages(branch, add)
-            del_packages(branch, del)
-            clean_maintainers()
-            update_local_repo_version(repo, arch, version)
-            res = del
-        else
-            log(("Skipping: %s/%s/%s"):format(branch, repo, arch))
-        end
+    local version = repo_updated(branch, repo, arch)
+    if version then
+        log(("Updating: %s/%s/%s"):format(branch, repo, arch))
+        local add,del = get_changes(branch, repo, arch)
+        add_packages(branch, add)
+        del_packages(branch, del)
+        clean_maintainers()
+        update_local_repo_version(repo, arch, version)
+        res = del
+    else
+        log(("Skipping: %s/%s/%s"):format(branch, repo, arch))
     end
     return res
 end
