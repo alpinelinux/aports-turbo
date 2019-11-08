@@ -19,7 +19,7 @@ end
 
 local function parse_email_addr(addr)
     if not addr then return false end
-	local name, email = addr:match('%s*(.-)%s*<([^>]+)>')
+    local name, email = addr:match('%s*(.-)%s*<([^>]+)>')
     email = email or addr:match('%S+@%S+')
     if email and email:match('^[%w%._%+%-%%%]+@[%w%._%-]+%.%w+$') then
         return name, email
@@ -44,20 +44,20 @@ end
 -- list the contents of an archive
 --
 local function archive_list(uri)
-	local res, cmd = {}
-	local tmp = os.tmpname()
-	local gzip = (os.execute("command -v pigz > /dev/null") == 0) and "-I pigz" or "-z"
-	cmd = uri:find("^https?://.*") and "wget -qO- %q 2> /dev/null | tar %s -t > %q 2> %q"
-		or "tar -tf %q %s > %q 2> %q"
-	cmd = cmd:format(tostring(uri), gzip, tmp, "/dev/null")
-	local ret = os.execute(cmd)
-	if ret == 0 then
-		for line in io.lines(tmp) do
-			table.insert(res, line)
-		end
-	end
-	os.remove(tmp)
-	return ret, res
+    local res, cmd = {}
+    local tmp = os.tmpname()
+    local gzip = (os.execute("command -v pigz > /dev/null") == 0) and "-I pigz" or "-z"
+    cmd = uri:find("^https?://.*") and "wget -qO- %q 2> /dev/null | tar %s -t > %q 2> %q"
+        or "tar -tf %q %s > %q 2> %q"
+    cmd = cmd:format(tostring(uri), gzip, tmp, "/dev/null")
+    local ret = os.execute(cmd)
+    if ret == 0 then
+        for line in io.lines(tmp) do
+            table.insert(res, line)
+        end
+    end
+    os.remove(tmp)
+    return ret, res
 end
 
 --
@@ -217,50 +217,50 @@ local function repo_updated(branch, repo, arch)
 end
 
 local function get_apk_index(branch, repo, arch)
-	local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
-	local ret,lines = archive_get_file(index, "APKINDEX")
-	local res,pkg = {},{}
-	if ret == 0 then
-		for _,line in ipairs(lines) do
-			if line ~= "" then
-				local k,v = line:match("^(%a):(.*)")
-				local field = conf.index.fields[k]
-				pkg[field] = k:match("^[Dpi]$") and split(v, "%S+") or v
-			else
-				local idx = ("%s-%s"):format(pkg.name, pkg.version)
-				pkg.repo = repo
-				pkg.branch = branch
-				res[idx] = pkg
-				pkg = {}
-			end
-		end
-	end
-	return ret, res
+    local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
+    local ret,lines = archive_get_file(index, "APKINDEX")
+    local res,pkg = {},{}
+    if ret == 0 then
+        for _,line in ipairs(lines) do
+            if line ~= "" then
+                local k,v = line:match("^(%a):(.*)")
+                local field = conf.index.fields[k]
+                pkg[field] = k:match("^[Dpi]$") and split(v, "%S+") or v
+            else
+                local idx = ("%s-%s"):format(pkg.name, pkg.version)
+                pkg.repo = repo
+                pkg.branch = branch
+                res[idx] = pkg
+                pkg = {}
+            end
+        end
+    end
+    return ret, res
 end
 
 local function get_changes(branch, repo, arch)
     local del = {}
     local ret, add = get_apk_index(branch, repo, arch)
     if ret == 0 then
-	    local sql = [[
-	        SELECT repo, arch, name, version, origin
-	        FROM packages
-	        WHERE repo = :repo
-	        AND arch = :arch
-	    ]]
-	    local stmt = db:prepare(sql)
-	    sql_debug("get_changes", sql)
-	    stmt:bind_values(repo, arch)
-	    for r in stmt:nrows() do
-	        local nv = ("%s-%s"):format(r.name, r.version)
-	        if add[nv] then
-	            add[nv] = nil
-	        else
-	            del[nv] = r
-	        end
-	    end
-	    stmt:finalize()
-	end
+        local sql = [[
+            SELECT repo, arch, name, version, origin
+            FROM packages
+            WHERE repo = :repo
+            AND arch = :arch
+        ]]
+        local stmt = db:prepare(sql)
+        sql_debug("get_changes", sql)
+        stmt:bind_values(repo, arch)
+        for r in stmt:nrows() do
+            local nv = ("%s-%s"):format(r.name, r.version)
+            if add[nv] then
+                add[nv] = nil
+            else
+                del[nv] = r
+            end
+        end
+        stmt:finalize()
+    end
     return add,del
 end
 
@@ -347,18 +347,18 @@ local function add_fields(pid, pkg)
 end
 
 local function get_file_list(apk)
-	local res = {}
-	local ret, list = archive_list(apk)
-	if ret == 0 then
-		for _,item in ipairs(list) do
-			if not (item:match("^%.") or item:match("/$")) then
-				local tbl = item:match("/") and {item:match("(.*)/(.*)")} or {"", item}
-				tbl[1] = ("/%s"):format(tbl[1])
-				table.insert(res, tbl)
-			end
-		end
-	end
-	return res
+    local res = {}
+    local ret, list = archive_list(apk)
+    if ret == 0 then
+        for _,item in ipairs(list) do
+            if not (item:match("^%.") or item:match("/$")) then
+                local tbl = item:match("/") and {item:match("(.*)/(.*)")} or {"", item}
+                tbl[1] = ("/%s"):format(tbl[1])
+                table.insert(res, tbl)
+            end
+        end
+    end
+    return res
 end
 
 local function add_files(pid, apk, pkg)
