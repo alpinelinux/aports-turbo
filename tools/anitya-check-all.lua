@@ -38,7 +38,7 @@ local anitya_distro_pkg_uri = ("%s/project/%s/%s"):format(
 -- response as a table.
 local function fetch_distro_pkg(pkgname)
     local url = anitya_distro_pkg_uri:format(pkgname)
-    local res = yield(HTTPClient():fetch(url))
+    local res = yield(HTTPClient({verify_ca = false}):fetch(url))
 
     if res.error then
         error(res.error)
