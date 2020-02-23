@@ -64,10 +64,6 @@ a {
     margin-bottom: 2em;
 }
 
-.table-responsive {
-    overflow-x: auto;
-}
-
 /* header settings */
 
 header {
@@ -364,6 +360,14 @@ footer a {
 /* tablets */
 
 @media(min-width: 48em) {}
+
+/* phones & tablets */
+@media (max-width: 54em) {
+    .table-responsive {
+        overflow-x: auto;
+        min-height: 40vh;
+    }
+}
 
 /* responsive menu */
 
