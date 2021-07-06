@@ -101,7 +101,7 @@ config.git.pkgpath = "https://git.alpinelinux.org/cgit/aports/tree/%s/%s?h=%s"
 ----
 -- url to the build log
 ----
-config.buildlog = "http://build.alpinelinux.org/buildlogs/build-%s-%s/%s/%s/%s-%s.log"
+config.buildlog = "https://build.alpinelinux.org/buildlogs/build-%s-%s/%s/%s/%s-%s.log"
 ----
 -- directory where views are stored
 ----
