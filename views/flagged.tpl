@@ -49,9 +49,7 @@
                     <tbody>
                         {{#pkgs}}
                         <tr>
-                            <td class="package">
-                                <a href="{{origin.path}}">{{origin.text}}</a>
-                            </td>
+                            <td class="package"><a href="{{origin.path}}">{{origin.text}}</a></td>
                             <td class="version text-danger"><strong>{{version}}</strong></td>
                             <td class="new_version">{{new_version}}</td>
                             <td class="repo">
