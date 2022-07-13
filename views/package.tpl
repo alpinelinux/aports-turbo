@@ -86,7 +86,7 @@
                         </table>
                     </div>
                     <div class="flag-button">
-                        <a class="pure-button" href="{{pkg.version.path}}">Flag</a>
+                        <a class="pure-button" href="{{pkg.version.path}}">Flag out of date</a>
                     </div>
                 </div>
                 <div class="pure-u-1 pure-u-lg-3-24"></div>
