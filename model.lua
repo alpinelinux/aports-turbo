@@ -133,7 +133,7 @@ function model.package(pkg)
     r.git = string.format(conf.git.pkgpath, pkg.repo, pkg.origin,
         model.branchFormat(pkg.branch))
     r.log = string.format(conf.buildlog, model.logBranchFormat(pkg.branch),
-        pkg.arch, pkg.repo, pkg.name, pkg.name, pkg.version)
+        pkg.arch, pkg.repo, pkg.origin, pkg.origin, pkg.version)
     return r
 end
 
