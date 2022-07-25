@@ -43,8 +43,12 @@
                                 <tr><th class="header">Version</th><td>{{version}}</td></tr>
                             </tbody>
                         </table>
-                        <aside>Flagging a package out of date will always select the orgin package.
+                        <aside>Flagging a package out of date will always select the origin package.
                         This means if you have selected another package to flag this is most probably a subpackage of ({{origin}})</aside>
+                        <aside style="background-color: #feecf0; color: cc0f35;">
+                          This form is intented to report outdated packages.
+                          Please report all other issues related to {{origin}} via the <a href="https://gitlab.alpinelinux.org/alpine/aports/-/issues">bug tracker</a>
+                        </aside>
                     </div>
                 </div>
             </div>
