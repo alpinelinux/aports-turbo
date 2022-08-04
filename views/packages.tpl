@@ -19,7 +19,7 @@
                                 </div>
                                 <div class="pure-u-1 pure-u-md-2-24 form-field">
                                     <select class="pure-input-1" name="repo" id="repo">
-                                        <option value="" disabled {{form.placeholder.repo}}>Repository</option>
+                                        <option value="" {{form.placeholder.repo}}>Repository</option>
                                     {{#form.repo}}
                                         <option {{{selected}}}>{{text}}</option>
                                     {{/form.repo}}
@@ -27,7 +27,7 @@
                                 </div>
                                 <div class="pure-u-1 pure-u-md-2-24 form-field">
                                     <select class="pure-input-1" name="arch" id="arch">
-                                        <option value="" disabled {{form.placeholder.arch}}>Arch</option>
+                                        <option value="" {{form.placeholder.arch}}>Arch</option>
                                     {{#form.arch}}
                                         <option {{{selected}}}>{{text}}</option>
                                     {{/form.arch}}
@@ -35,7 +35,7 @@
                                 </div>
                                 <div class="pure-u-1 pure-u-md-5-24 form-field">
                                     <select class="pure-input-1" name="maintainer" id="maintainer">
-                                        <option value="" disabled {{form.placeholder.maintainer}}>Maintainer</option>
+                                        <option value="" {{form.placeholder.maintainer}}>Maintainer</option>
                                     {{#form.maintainer}}
                                         <option {{{selected}}}>{{text}}</option>
                                     {{/form.maintainer}}
