@@ -55,9 +55,9 @@ log.notice 'Checking outdated packages using Anitya...'
 cc.foreach(aports.each_aport_name(), function(pkgname)
     local proj = fetch_distro_pkg(pkgname)
 
-    if proj and proj.version then
-        log.debug(("Found %s %s"):format(pkgname, proj.version))
-        aports.flag_outdated_pkgs(pkgname, proj.version)
+    if proj and proj.stable_versions and proj.stable_versions[1] then
+        log.debug(("Found %s %s"):format(pkgname, proj.stable_versions[1]))
+        aports.flag_outdated_pkgs(pkgname, proj.stable_versions[1])
     else
         log.debug('Did not find '..pkgname)
     end
