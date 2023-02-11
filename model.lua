@@ -1,5 +1,6 @@
 local conf       = require('config')
 local utils      = require('utils')
+local url        = require("socket.url")
 
 local default    = utils.default
 local escape_uri = utils.escape_uri
@@ -127,7 +128,7 @@ function model.package(pkg)
     }
     r.contents = {
         path=string.format("/contents?branch=%s&name=%s&arch=%s&repo=%s",
-            pkg.branch, pkg.name, pkg.arch, pkg.repo),
+            pkg.branch, url.escape(pkg.name), pkg.arch, pkg.repo),
         text="Contents of package"
     }
     r.git = string.format(conf.git.pkgpath, pkg.repo, pkg.origin,
@@ -144,7 +145,7 @@ function model.flagged(pkgs)
         r[k] = {}
         r[k].origin = {
             path = ("packages?branch=%s&repo=%s&name=%s"):format(
-                conf.default.branch, v.repo, v.origin),
+                conf.default.branch, v.repo, url.escape(v.origin)),
             text=v.origin,
             title=v.description
         }
