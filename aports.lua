@@ -1,6 +1,8 @@
 #!/usr/bin/env luajit
 
 TURBO_SSL   = true
+__TURBO_USE_LUASOCKET__ = false
+
 local turbo = require("turbo")
 
 local conf  = require("config")
