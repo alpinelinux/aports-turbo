@@ -242,7 +242,7 @@ end
 local function get_changes(branch, repo, arch)
     local del = {}
     local ret, add = get_apk_index(branch, repo, arch)
-    if ret == 0 then
+    if ret then
         local sql = [[
             SELECT repo, arch, name, version, origin
             FROM packages
@@ -350,7 +350,7 @@ end
 local function get_file_list(apk)
     local res = {}
     local ret, list = archive_list(apk)
-    if ret == 0 then
+    if ret then
         for _,item in ipairs(list) do
             if not (item:match("^%.") or item:match("/$")) then
                 local tbl = item:match("/") and {item:match("(.*)/(.*)")} or {"", item}
