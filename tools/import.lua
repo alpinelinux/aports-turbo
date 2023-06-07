@@ -46,12 +46,12 @@ end
 local function archive_list(uri)
     local res, cmd = {}
     local tmp = os.tmpname()
-    local gzip = (os.execute("command -v pigz > /dev/null") == 0) and "-I pigz" or "-z"
+    local gzip = os.execute("command -v pigz > /dev/null") and "-I pigz" or "-z"
     cmd = uri:find("^https?://.*") and "wget -qO- %q 2> /dev/null | tar %s -t > %q 2> %q"
         or "tar -tf %q %s > %q 2> %q"
     cmd = cmd:format(tostring(uri), gzip, tmp, "/dev/null")
     local ret = os.execute(cmd)
-    if ret == 0 then
+    if ret then
         for line in io.lines(tmp) do
             table.insert(res, line)
         end
@@ -70,7 +70,7 @@ local function archive_get_file(uri, file)
         or "tar -Ozxf %q %q > %q 2> %q"
     cmd = cmd:format(tostring(uri), tostring(file), tmp, "/dev/null")
     local ret = os.execute(cmd)
-    if ret == 0 then
+    if ret then
         for line in io.lines(tmp) do
             table.insert(res, line)
         end
@@ -212,15 +212,16 @@ end
 local function repo_updated(branch, repo, arch)
     local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
     local version = get_local_repo_version(repo, arch)
+    print("trying to read: ", index)
     local ret, desc = archive_get_file(index, "DESCRIPTION")
-    return (ret == 0 and version ~= desc[1]) and desc[1] or false
+    return (ret and version ~= desc[1]) and desc[1] or false
 end
 
 local function get_apk_index(branch, repo, arch)
     local index = ("%s/%s/%s/%s/APKINDEX.tar.gz"):format(conf.mirror, branch, repo, arch)
     local ret,lines = archive_get_file(index, "APKINDEX")
     local res,pkg = {},{}
-    if ret == 0 then
+    if ret then
         for _,line in ipairs(lines) do
             if line ~= "" then
                 local k,v = line:match("^(%a):(.*)")
