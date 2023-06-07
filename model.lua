@@ -3,7 +3,6 @@ local utils      = require('utils')
 local url        = require("socket.url")
 
 local default    = utils.default
-local escape_uri = utils.escape_uri
 
 local model      = {}
 
@@ -204,7 +203,7 @@ function model.pagerModel(args, pager)
                     end
                 end
                 if v ~= "" then
-                    r[#r+1]=string.format("%s=%s", escape_uri(g), escape_uri(v))
+                    r[#r+1]=string.format("%s=%s", url.escape(g), url.escape(v))
                 end
             end
             local path = table.concat(r, '&amp;')
