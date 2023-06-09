@@ -17,6 +17,8 @@
 --
 
 TURBO_SSL = true
+__TURBO_USE_LUASOCKET__ = false
+
 local _      = require 'turbo'
 local async  = require 'turbo.async'
 local escape = require 'turbo.escape'
