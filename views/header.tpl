@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-<head>
+<head profile="http://a9.com/-/spec/opensearch/1.1/">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alpine Linux packages</title>
@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="/assets/hint.min.css">
     <link rel="stylesheet" href="/assets/style.css">
     <link rel="shortcut icon" href="/assets/favicon.ico">
+    <link rel="search"
+      type="application/opensearchdescription+xml"
+      href="http://pkgs.alpinelinux.org/assets/opensearch.xml"
+      title="Alpine Packages Search" />
 </head>
 <body>
     <div id="wrapper">
